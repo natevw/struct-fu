@@ -2,6 +2,8 @@
 
 [Yet another] buffer layout helper, sort of like `typedef struct foo` for JavaScript.
 
+**WORK IN PROGRESS** — I haven't tried this code yet, and I'm sure the `_.struct` implementation isn't right yet for starters.
+
 
 ## Installation
 
@@ -52,7 +54,7 @@ var fields = entry(blank)
 - No hidden/implicit padding or alignment (WYSIWYG)
 - Defaults to network byte order (Big Endian); or use `le` suffix (Little Endian)
 - For `byte` and `char` types, `count` param is buffer/string length respectively. For `bit` types, count is bitfield width. For all other types (including `bool` and `struct` itself), `count` makes an array of that type.
-- Pass a buffer to a type to get a value/object/array back, otherwise pass a value/object/array to get a buffer. [**TBD**: buffer field is probably brokt in this regard?]
+- Pass a buffer to a type to get a value/object/array back, otherwise pass a value/object/array to get a buffer. [**TBD**: byte field is probably brokt in this regard?]
 
 ## License
 
