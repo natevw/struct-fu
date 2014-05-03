@@ -45,13 +45,14 @@ _.uint8(20)(Buffer(20));
 var blank = new Buffer(entry.size);
 blank.fill(0);
 var fields = entry(blank)
-
-
-
 ```
 
+## Concepts
 
-
+- No hidden/implicit padding or alignment (WYSIWYG)
+- Defaults to network byte order (Big Endian); or use `le` suffix (Little Endian)
+- For `byte` and `char` types, `count` param is buffer/string length respectively. For `bit` types, count is bitfield width. For all other types (including `bool` and `struct` itself), `count` makes an array of that type.
+- Pass a buffer to a type to get a value/object/array back, otherwise pass a value/object/array to get a buffer. [**TBD**: buffer field is probably brokt in this regard?]
 
 ## License
 
