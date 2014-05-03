@@ -1,0 +1,23 @@
+{
+  "name": "struct-fu",
+  "version": "0.0.0",
+  "description": "Yet another node.js struct implementation (object↔︎buffer conversion) ",
+  "main": "lib.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/natevw/struct-fu.git"
+  },
+  "keywords": [
+    "struct",
+    "buffer"
+  ],
+  "author": "Nathan Vander Wilt",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/natevw/struct-fu/issues"
+  },
+  "homepage": "https://github.com/natevw/struct-fu"
+}
