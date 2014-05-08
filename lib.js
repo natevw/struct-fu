@@ -79,6 +79,7 @@ _.struct = function (name, fields, count) {
         },
         dump: function (val, buf, off) {
             fields.forEach(function (field) {
+            // TODO: val[name] stuff here instead, using `field.name`?
                 field.bytesFromValue(val, {offset:off, output:buf});
                 off += field.size;
             });
@@ -101,7 +102,7 @@ _.char = function (name, count) {
     return _normalizeFieldSig(function _read(buf, off, obj) {
         obj[name] = buff.slice(off, count).toString();
     }, Object, function _dump(obj, buf, off) {
-console.log("char dump", obj, buf, off, name, count);
+console.log("char(dump)", obj, buf, off, name, count);
         buf.write(obj[name], off, count);
     }, count);
 };
