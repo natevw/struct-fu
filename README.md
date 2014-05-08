@@ -40,13 +40,10 @@ var entry = _.struct([
     _.uint16le('cluster'),
     _.uint32le('filesize')
 ]);
-
-
-_.uint8(20)(Buffer(20));
-
-var blank = new Buffer(entry.size);
-blank.fill(0);
-var fields = entry(blank)
+var obj = entry.valueFromBytes(buf),
+    buf = entry.bytesFromValue(obj);
+// not just structs
+_.uint8(20).valueFromBytes(Buffer(20));
 ```
 
 ## Concepts

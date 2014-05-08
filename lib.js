@@ -18,57 +18,68 @@ function extend(obj) {
 }
 
 function _normalizeFieldSig(read, type, dump, size) {
-    return extend(function (src, off, dst) {
-        off || (off = 0);
-        if (Buffer.isBuffer(src)) {
-            dst || (dst = new type());
-            read(src, off, dst);
-        } else {
-            dst || (dst = new Buffer(size));
-            dump(src, dst, off);
-        }
-        return dst;
-    }, {size:size});
-}
-
-function field(name, count) {
-    var ctx = this;
-    return (count) ? _normalizeFieldSig(function (buf, off, arr) {
-            // read array
-            for (var i = 0; i < count; i += 1) {
-                arr[i] = ctx.read(buf, off);
-                off += ctx.size;
-            }
-        }, Array, function (arr, buf, off) {
-            // dump array
-            arr.forEach(function () {
-                ctx.dump(obj[name], buf, off);
-                off += ctx.size;
-            });
-        }, ctx.size*count) : _normalizeFieldSig(function (buf, off, obj) {
-            // read value
-            obj[name] = ctx.read(buff, off);
-        }, Object, function (obj, buf, off) {
-            // dump value
-            ctx.dump(obj[name], buf, off);
-        }, ctx.size);
+    return {
+        valueFromBytes: function (buf, opts) {
+            var off = (opts && opts.offset) || 0,
+                obj = (opts && opts.destination) || new type();
+            read(buf, off, obj);
+            return obj;
+        },
+        bytesFromValue: function (obj, opts) {
+            var buf = (opts && opts.output) || new Buffer(size),
+                off = (opts && opts.offset) || 0;
+            dump(obj, buf, off);
+            return buff;
+        },
+        size: size
     };
 }
 
+function field(name, count) {
+    if (arguments.length < 2) {
+        count = name;
+        name = null;
+    }
+    var ctx = this;
+    return (count) ? _normalizeFieldSig(function (buf, off, arr) {
+        // read array
+        for (var i = 0; i < count; i += 1) {
+            arr[i] = ctx.read(buf, off);
+            off += ctx.size;
+        }
+    }, Array, function (arr, buf, off) {
+        // dump array
+        arr.forEach(function () {
+            ctx.dump(obj[name], buf, off);
+            off += ctx.size;
+        });
+    }, ctx.size*count) : _normalizeFieldSig(function (buf, off, obj) {
+        // read value
+        obj[name] = ctx.read(buff, off);
+    }, Object, function (obj, buf, off) {
+        // dump value
+        ctx.dump(obj[name], buf, off);
+    }, ctx.size);
+}
 
 _.struct = function (name, fields, count) {
+    if (typeof name !== 'string') {
+        count = fields;
+        fields = name;
+        name = null;
+    }
     return field.call({
         read: function (buf, off) {
             var obj = new Object();
             fields.forEach(function (field) {
-                field(buff, off, obj);
+                field.valueFromBytes(buf, {offset:off, destination:obj});
                 off += field.size;
             });
             return obj;
         },
         dump: function (val, buf, off) {
             fields.forEach(function (field) {
-                field(val, off, buf);
+                field.bytesFromValue(val, {offset:off, output:buf});
                 off += field.size;
             });
         },
@@ -90,6 +101,7 @@ _.char = function (name, count) {
     return _normalizeFieldSig(function _read(buf, off, obj) {
         obj[name] = buff.slice(off, count).toString();
     }, Object, function _dump(obj, buf, off) {
+console.log("char dump", obj, buf, off, name, count);
         buf.write(obj[name], off, count);
     }, count);
 };
@@ -127,19 +139,11 @@ _.int32 = standardField('Int32BE');
 _.int16le = standardField('Int16LE');
 _.int32le = standardField('Int32LE');
 
-/*
-_.bool = field.bind({
-    size: [1]
-});
-_.ubit = field.bind({
-    size: [1]
-});
-_.sbit = field.bind({
-    size: [1]
-});
+// TODO: bitfields need real implementation
+_.bool = standardField('Int8');
+_.ubit = standardField('Int8');
+_.sbit = standardField('Int8');
 
 //_.padTo?
-*/
-
 
 module.exports = _;
