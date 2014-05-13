@@ -4,7 +4,8 @@ var entry = _.struct([
     _.char('filename',8),
     _.char('extension',3),
     _.struct('flags', [
-        _.bool('readonly'),
+        _.ubit('reserved', 2),
+        _.bool('readonly'),     // TODO: these need to be reversed
         _.bool('hidden'),
         _.bool('system'),
         _.bool('volume'),
@@ -15,7 +16,7 @@ var entry = _.struct([
     _.struct('time', [
         _.ubit('hour',5),
         _.ubit('minutes',6),
-        _.ubit('seconds:5')
+        _.ubit('seconds',5)
     ]),
     _.struct('date', [
         _.ubit('year',7),
@@ -27,7 +28,7 @@ var entry = _.struct([
 ]);
 
 
-var obj0 = {filename:"autoexec", extension:"batch"},
+var obj0 = {filename:"autoexec", extension:"batch", flags:{reserved:2,archive:true}},
     _buf = entry.bytesFromValue(obj0),
     obj1 = entry.valueFromBytes(_buf);
-console.log(obj0, obj1);
+console.log('',obj0, "\n==>\n", obj1);
