@@ -1,5 +1,9 @@
 var _ = {};
 
+function assert(bool, message) {
+    if (!bool) throw Error(message);
+}
+
 function arrayizeField(f, count) {
     return (count) ? {
         valueFromBytes: function (buf) {
@@ -13,6 +17,7 @@ function arrayizeField(f, count) {
             return arr;
         },
         bytesFromValue: function (arr, buf) {
+            arr || (arr = new Array(count));
             buf || (buf = new Buffer(this.size));
             var off = 0;
             for (var idx = 0, len = arr.length; idx < len; idx += 1) {
@@ -45,6 +50,7 @@ _.struct = function (name, fields, count) {
             return obj;
         },
         bytesFromValue: function (obj, buf) {
+            obj || (obj = {});
             buf || (buf = new Buffer(this.size));
             var off = 0;
             fields.forEach(function (f) {
@@ -72,6 +78,10 @@ _.byte = function (name, size, count) {
             return buf;
         },
         bytesFromValue: function (val, buf) {
+            if (!val) {
+                val = new Buffer(this.size);
+                val.fill(0);
+            }
             buf || (buf = new Buffer(this.size));
             val.copy(buf, 0, 0, this.size)
             return buf;
@@ -92,6 +102,7 @@ _.char = function (name, size, count) {
             return buf.toString();
         },
         bytesFromValue: function (str, buf) {
+            str || (str = '');
             buf || (buf = new Buffer(this.size));
             buf.write(str, 0, this.size);
             return buf;
@@ -114,7 +125,8 @@ function standardField(sig, size) {
             valueFromBytes: function (buf) {
                 return buf[read](0);
             },
-            bytesFromValue: function (str, buf) {
+            bytesFromValue: function (val, buf) {
+                val || (val = 0);
                 buf || (buf = new Buffer(this.size));
                 buf[dump](val, 0);
                 return buf;
