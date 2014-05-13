@@ -4,14 +4,14 @@ var entry = _.struct([
     _.char('filename',8),
     _.char('extension',3),
     _.struct('flags', [
-        _.ubit('reserved', 2),
-        _.bool('readonly'),     // TODO: these need to be reversed
+        _.bool('readonly'),
         _.bool('hidden'),
         _.bool('system'),
         _.bool('volume'),
         _.bool('directory'),
-        _.bool('archive')
-    ]),
+        _.bool('archive'),
+        _.ubit('reserved', 2)
+    ].reverse()),
     _.byte('reserved', 10),
     _.struct('time', [
         _.ubit('hour',5),
@@ -26,7 +26,6 @@ var entry = _.struct([
     _.uint16le('cluster'),
     _.uint32le('filesize')
 ]);
-
 
 var obj0 = {filename:"autoexec", extension:"batch", flags:{reserved:2,archive:true}},
     _buf = entry.bytesFromValue(obj0),
