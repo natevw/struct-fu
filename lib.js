@@ -164,7 +164,8 @@ _.byte = function (name, size, count) {
                 val.fill(0);
             }
             buf || (buf = new Buffer(this.size));
-            val.copy(buf, 0, 0, this.size)
+            val.copy(buf, 0, 0, this.size);
+            if (val.length < this.size) buf.fill(0, val.length);
             return buf;
         },
         size: size,
