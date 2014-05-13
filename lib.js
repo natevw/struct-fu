@@ -1,9 +1,5 @@
 var _ = {};
 
-function assert(bool, message) {
-    if (!bool) throw Error(message);
-}
-
 function arrayizeField(f, count) {
     return (count) ? {
         valueFromBytes: function (buf) {
@@ -165,17 +161,3 @@ _.sbit = standardField('Int8');
 //_.padTo?
 
 module.exports = _;
-
-
-
-
-
-
-function extend(obj) {
-    Array.prototype.slice.call(arguments, 1).forEach(function (ext) {
-        Object.keys(ext).forEach(function (key) {
-            obj[key] = ext[key];
-        });
-    });
-    return obj;
-}
