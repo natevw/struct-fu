@@ -27,7 +27,7 @@ var entry = _.struct([
 ]);
 
 
-var obj0 = {},
+var obj0 = {filename:"autoexec", extension:"batch"},
     _buf = entry.bytesFromValue(obj0),
     obj1 = entry.valueFromBytes(_buf);
 console.log(obj0, obj1);

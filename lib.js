@@ -99,12 +99,15 @@ _.char = function (name, size, count) {
     }
     return arrayizeField({
         valueFromBytes: function (buf) {
-            return buf.toString();
+            var val = buf.toString(),
+                nul = val.indexOf('\0');
+            return (~nul) ? val.slice(0, nul) : val;
         },
         bytesFromValue: function (str, buf) {
             str || (str = '');
             buf || (buf = new Buffer(this.size));
-            buf.write(str, 0, this.size);
+            var off = buf.write(str, 0, this.size);
+            if (off < this.size) buf.fill(0, off);
             return buf;
         },
         size: size,
