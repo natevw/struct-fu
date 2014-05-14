@@ -70,7 +70,7 @@ _.struct = function (name, fields, count) {
                 if ('width' in f) {
                     var bytes = new Buffer(4);
                     buf.copy(bytes, 0, off.bytes);
-                    value = f.valueFromBits(bytes, off.bits);
+                    value = f._valueFromBits(bytes, off.bits);
                     addBits(off, f.width);
                 } else {
                     var bytes = buf.slice(off.bytes, off.bytes += f.size);
@@ -88,7 +88,7 @@ _.struct = function (name, fields, count) {
                 var value = obj[f.name];
                 if ('width' in f) {
                     var bytes = buf.slice(off.bytes, off.bytes+4);
-                    f.bitsFromValue(value, bytes, off.bits);
+                    f._bitsFromValue(value, bytes, off.bits);
                     addBits(off, f.width);
                 } else {
                     var bytes = buf.slice(off.bytes, off.bytes += f.size);
@@ -113,13 +113,13 @@ function bitfield(name, width) {
     var impl = this,
         mask = FULL >>> (32 - width);
     return {
-        valueFromBits: function (buf, bit) {
+        _valueFromBits: function (buf, bit) {
             var end = bit + width,
                 word = buf.readUInt32BE(0, true),
                 over = word >>> (32 - end);
             return impl.b2v(over & mask);
         },
-        bitsFromValue: function (val, buf, bit) {
+        _bitsFromValue: function (val, buf, bit) {
             val || (val = 0);
             val = impl.v2b(val);
             var end = bit + width,
