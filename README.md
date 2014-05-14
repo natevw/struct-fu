@@ -11,7 +11,7 @@
 
 
 ```
-var _ = require("./lib");
+var _ = require('struct-fu');
 
 var entry = _.struct([
     _.char('filename',8),
