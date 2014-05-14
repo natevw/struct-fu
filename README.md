@@ -2,18 +2,16 @@
 
 [Yet another] buffer layout helper, sort of like `typedef struct foo` for JavaScript.
 
-**WORK IN PROGRESS** — I haven't tried this code yet, and I'm sure the `_.struct` implementation isn't right yet for starters.
-
 
 ## Installation
 
-`npm install hedder`
+`npm install struct-fu`
 
 ## Example
 
 
 ```
-var _ = require('struct-fu');
+var _ = require("./lib");
 
 var entry = _.struct([
     _.char('filename',8),
@@ -23,14 +21,15 @@ var entry = _.struct([
         _.bool('hidden'),
         _.bool('system'),
         _.bool('volume'),
-        _.bool('directory',
-        _.bool('archive')
-    ]),
+        _.bool('directory'),
+        _.bool('archive'),
+        _.ubit('reserved', 2)
+    ].reverse()),
     _.byte('reserved', 10),
     _.struct('time', [
         _.ubit('hour',5),
         _.ubit('minutes',6),
-        _.ubit('seconds:5')
+        _.ubit('seconds',5)
     ]),
     _.struct('date', [
         _.ubit('year',7),
@@ -40,18 +39,65 @@ var entry = _.struct([
     _.uint16le('cluster'),
     _.uint32le('filesize')
 ]);
-var obj = entry.valueFromBytes(buf),
-    buf = entry.bytesFromValue(obj);
-// not just structs
-_.uint8(20).valueFromBytes(Buffer(20));
+
+var obj0 = {filename:"autoexec", extension:"batch", flags:{reserved:2,archive:true}},
+    _buf = entry.bytesFromValue(obj0),
+    obj1 = entry.valueFromBytes(_buf);
+console.log('',obj0, "\n==>\n", obj1);
 ```
 
 ## Concepts
 
 - No hidden/implicit padding or alignment (WYSIWYG)
 - Defaults to network byte order (Big Endian); or use `le` suffix (Little Endian)
-- For `byte` and `char` types, `count` param is buffer/string length respectively. For `bit` types, count is bitfield width. For all other types (including `bool` and `struct` itself), `count` makes an array of that type.
-- Pass a buffer to a type to get a value/object/array back, otherwise pass a value/object/array to get a buffer. [**TBD**: byte field is probably brokt in this regard?]
+- Bit fields are declared in Most Significant to Least Significant bit order (tip: `[/*…fields…*/].reverse()` to swap)
+- For `byte` and `char` types, `width` param is buffer/string length respectively. For `bit` types, count is bitfield width. For all other types (including `bool` [**TBD**] and `struct` itself), `count` makes an array of that type.
+- When writing, default values are provided.
+
+## API
+
+### Normal field types
+
+Here are the available "normal" field types. Note that for standalone fields the `name` and `count` parameters are always optional. For fields nested within a struct field, you must provide a `name`.
+
+- `_.struct(name, fields, count)` — `fields` is an array of nested fields, which will be packed directly one after another with no concern for any particular compiler's alignment preferences. The first field in the array will start at the first byte in the buffer. (For bitfields you may wish to provide a `fields.reverse()` value to match little endian compilers.)
+- `_.char(name, size, count)` — UTF-8 string. Writes NUL-terminated only if too short, not if string fits exact size or gets truncated. Reads to NUL or full size, whichever comes first.
+- `_.byte(name, size, count)` — Binary buffer. Writes truncated or zero padded as necessary. Always reads field to full size.
+- `_.<numeric type>(name, count)` — Floats and integers, defaulting to network byte order (i.e. Big Endian) or you can use the `…le` versions. Numeric type fields pretty much correspond directly to the equivalent node.js `Buffer` read/write methods you would expect. (There are no 64-bit integers because JavaScript does not properly support the full range of such values.)
+    - `_.float32`
+    - `_.float64`
+    - `_.uint8`
+    - `_.uint16`
+    - `_.uint32`
+    - `_.int8`
+    - `_.int16`
+    - `_.int32`
+    - `_.float32le`
+    - `_.float64le`
+    - `_.uint16le`
+    - `_.uint32le`
+    - `_.int16le`
+    - `_.int32le`
+
+All the field above implement the same interface once created:
+
+— `field.name` — The name of this field instance or `null` if none was provided.
+— `field.size` — The total size of buffer this field (and any nested/repeated fields) will read/write.
+- `field.bytesFromValue(val, buf)` — The type of `val` provided will depend on the field (e.g. number for numerics, object for structs, array for any counted field), but this method always returns a buffer. `buf` is optional — if you do not provide a slice of an existing buffer to fill, a new buffer of length `field.size` will be returned.
+- `field.valueFromBytes(buf)` — Returns a JavaScript value extracted from the provided buffer.
+
+You can use each of these fields nested inside a structure, or on their own. For example, `_.uint32(2).valueFromBytes(Buffer(8))` converts the unitialized buffer to an array of two somewhat-random numbers.
+
+
+### Bitfield types
+
+These fields are intended for use *only* within a parent `_.struct` field:
+
+- `_.bool(name, count)` — A single bit, read back as a boolean. [**TBD**] This field *can* be used in array form.
+- `_.ubit(name, width)` — An unsigned integer; most significant bit first.
+- `_.sbit(name, width)` — A signed integer; if the most sigificant bit is set the value is negative.
+
+Except for the `bitfield.name` and `bitfield.width` properties, the bitfield interface (used internally by `_.struct`) is undocumented and subject to change.
 
 ## License
 
