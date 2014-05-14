@@ -76,7 +76,10 @@ _.struct = function (name, fields, count) {
                     var bytes = buf.slice(off.bytes, off.bytes += f.size);
                     value = f.valueFromBytes(bytes);
                 }
-                obj[f.name] = value;
+                if (f.name) obj[f.name] = value;
+                else if (typeof value === 'object') Object.keys(value).forEach(function (k) {
+                    obj[k] = value[k];
+                });
             });
             return obj;
         },
@@ -85,7 +88,7 @@ _.struct = function (name, fields, count) {
             buf || (buf = new Buffer(this.size));
             var off = {bytes:0, bits:0};
             fields.forEach(function (f) {
-                var value = obj[f.name];
+                var value = (f.name) ? obj[f.name] : obj;
                 if ('width' in f) {
                     var bytes = buf.slice(off.bytes, off.bytes+4);
                     f._bitsFromValue(value, bytes, off.bits);

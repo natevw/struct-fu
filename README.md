@@ -60,7 +60,7 @@ console.log('',obj0, "\n==>\n", obj1);
 
 Here are the available "normal" field types. Note that for standalone fields the `name` and `count` parameters are always optional. For fields nested within a struct field, you must provide a `name`.
 
-- `_.struct(name, fields, count)` — `fields` is an array of nested fields, which will be packed directly one after another with no concern for any particular compiler's alignment preferences. The first field in the array will start at the first byte in the buffer. (For bitfields you may wish to provide a `fields.reverse()` value to match little endian compilers.)
+- `_.struct(name, fields, count)` — `fields` is an array of nested fields, which will be packed directly one after another with no concern for any particular compiler's alignment preferences. The first field in the array will start at the first byte in the buffer. (For bitfields you may wish to provide a `fields.reverse()` value to match little endian compilers.) Anonymous (i.e. un-named) structs will read/write fields directly within their parent struct; this is useful for reusing common fields or inlining bitfields.
 - `_.char(name, size, count)` — UTF-8 string. Writes NUL-terminated only if too short, not if string fits exact size or gets truncated. Reads to NUL or full size, whichever comes first.
 - `_.byte(name, size, count)` — Binary buffer. Writes truncated or zero padded as necessary. Always reads field to full size.
 - `_.<numeric type>(name, count)` — Floats and integers, defaulting to network byte order (i.e. Big Endian) or you can use the `…le` versions. Numeric type fields pretty much correspond directly to the equivalent node.js `Buffer` read/write methods you would expect. (There are no 64-bit integers because JavaScript does not properly support the full range of such values.)
@@ -102,6 +102,7 @@ Except for the `bitfield.name` and `bitfield.width` properties, the bitfield int
 ## License
 
 © 2014 Nathan Vander Wilt
+Funding for this work was provided in part by Technical Machine, Inc.
 
 Reuse under your choice of:
 
