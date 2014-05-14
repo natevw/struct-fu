@@ -1,10 +1,10 @@
 {
   "name": "struct-fu",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Yet another node.js struct implementation (object↔︎buffer conversion) ",
   "main": "lib.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test"
   },
   "repository": {
     "type": "git",
