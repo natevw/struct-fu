@@ -81,8 +81,8 @@ Here are the available "normal" field types. Note that for standalone fields the
 
 All the field above implement the same interface once created:
 
-— `field.name` — The name of this field instance or `null` if none was provided.
-— `field.size` — The total size of buffer this field (and any nested/repeated fields) will read/write.
+- `field.name` — The name of this field instance or `null` if none was provided.
+- `field.size` — The total size of buffer this field (and any nested/repeated fields) will read/write.
 - `field.bytesFromValue(val, buf)` — The type of `val` provided will depend on the field (e.g. number for numerics, object for structs, array for any counted field), but this method always returns a buffer. `buf` is optional — if you do not provide a slice of an existing buffer to fill, a new buffer of length `field.size` will be returned.
 - `field.valueFromBytes(buf)` — Returns a JavaScript value extracted from the provided buffer.
 
