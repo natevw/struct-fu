@@ -86,7 +86,7 @@ All the field above implement the same interface once created:
 - `field.bytesFromValue(val, buf)` — The type of `val` provided will depend on the field (e.g. number for numerics, object for structs, array for any counted field), but this method always returns a buffer. `buf` is optional — if you do not provide a slice of an existing buffer to fill, a new buffer of length `field.size` will be returned.
 - `field.valueFromBytes(buf)` — Returns a JavaScript value extracted from the provided buffer.
 
-You can use each of these fields nested inside a structure, or on their own. For example, `_.uint32(2).valueFromBytes(Buffer(8))` converts the unitialized buffer to an array of two somewhat-random numbers.
+You can use each of these fields nested inside a structure, or on their own. For example, `_.uint32(2).valueFromBytes(Buffer(8))` uses an anonymous field to convert the unitialized buffer into an array of two somewhat-random numbers.
 
 
 ### Bitfield types
