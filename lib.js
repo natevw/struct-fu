@@ -6,12 +6,38 @@ if (Buffer([255]).readUInt32BE(0, true) !== 0xff000000 || Buffer(0).readUInt32BE
 }
 
 function arrayizeField(f, count) {
-    return (count) ? {
+    return (count) ? (('width' in f) ? {
+        _valueFromBits: function (buf, bit) {
+            var arr = new Array(count),
+                off = {bytes:0, bits:bit};
+            for (var idx = 0, len = arr.length; idx < len; idx += 1) {
+                var bytes = buf.slice(off.bytes),
+                    value = f._valueFromBits(bytes, off.bits);
+                addBits(off, f.width);
+                arr[idx] = value;
+            }
+            return arr;
+        },
+        _bitsFromValue: function (arr, buf) {
+            arr || (arr = new Array(count));
+            buf || (buf = new Buffer(this.size));
+            var off = {bytes:0, bits:0};
+            for (var idx = 0, len = arr.length; idx < len; idx += 1) {
+                var value = arr[idx],
+                    bytes = buf.slice(off.bytes, off.bytes+4);
+                f._bitsFromValue(value, bytes, off.bits);
+                addBits(off, f.width);
+            }
+            return buf;
+        },
+        width: f.width * count,
+        name: f.name
+    } : {
         valueFromBytes: function (buf) {
             var arr = new Array(count),
-                off = 0;
+                off = {bytes:0, bits:0};
             for (var idx = 0, len = arr.length; idx < len; idx += 1) {
-                var bytes = buf.slice(off, off += f.size),
+                var bytes = buf.slice(off.bytes, off.bytes += f.size),
                     value = f.valueFromBytes(bytes);
                 arr[idx] = value;
             }
@@ -20,17 +46,17 @@ function arrayizeField(f, count) {
         bytesFromValue: function (arr, buf) {
             arr || (arr = new Array(count));
             buf || (buf = new Buffer(this.size));
-            var off = 0;
+            var off = {bytes:0, bits:0};
             for (var idx = 0, len = arr.length; idx < len; idx += 1) {
                 var value = arr[idx],
-                    bytes = buf.slice(off, off += f.size);
+                    bytes = buf.slice(off.bytes, off.bytes += f.size);
                 f.bytesFromValue(value, bytes);
             }
             return buf;
         },
-        size: f.size * count,
+        size: f.size,
         name: f.name
-    } : f;
+    }) : f;
 }
 
 
@@ -68,8 +94,7 @@ _.struct = function (name, fields, count) {
             fields.forEach(function (f) {
                 var value;
                 if ('width' in f) {
-                    var bytes = new Buffer(4);
-                    buf.copy(bytes, 0, off.bytes);
+                    var bytes = buf.slice(off.bytes, off.bytes+4);
                     value = f._valueFromBits(bytes, off.bits);
                     addBits(off, f.width);
                 } else {
@@ -109,13 +134,13 @@ _.struct = function (name, fields, count) {
 //       (this limitation is same as C itself, and keeps things sane…)
 
 var FULL = 0xFFFFFFFF;
-function bitfield(name, width) {
+function bitfield(name, width, count) {
     width || (width = 1);
     // NOTE: width limitation is so all values will align *within* a 4-byte word
     if (width > 24) throw Error("Bitfields support a maximum width of 24 bits.");
     var impl = this,
         mask = FULL >>> (32 - width);
-    return {
+    return arrayizeField({
         _valueFromBits: function (buf, bit) {
             var end = bit + width,
                 word = buf.readUInt32BE(0, true),
@@ -135,13 +160,16 @@ function bitfield(name, width) {
         },
         width: width,
         name: name
-    };
+    }, count);
 };
 
-_.bool = bitfield.bind({
-    b2v: function (b) { return Boolean(b); },
-    v2b: function (v) { return (v) ? FULL : 0; }
-});
+_.bool = function (name, count) {
+    return bitfield.call({
+        b2v: function (b) { return Boolean(b); },
+        v2b: function (v) { return (v) ? FULL : 0; }
+    }, name, 1, count);
+
+};
 _.ubit = bitfield.bind({
     b2v: function (b) { return b; },
     v2b: function (v) { return v; }

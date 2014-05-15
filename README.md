@@ -49,9 +49,9 @@ console.log('',obj0, "\n==>\n", obj1);
 ## Concepts
 
 - No hidden/implicit padding or alignment (WYSIWYG)
+- If `count` is provided, the field represents an array of that type.
 - Defaults to network byte order (Big Endian); or use `le` suffix (Little Endian)
 - Bit fields are declared in Most Significant to Least Significant bit order (tip: `[/*…fields…*/].reverse()` to swap)
-- For `byte` and `char` types, `width` param is buffer/string length respectively. For `bit` types, count is bitfield width. For all other types (including `bool` [**TBD**] and `struct` itself), `count` makes an array of that type.
 - When writing, default values are provided.
 
 ## API
@@ -91,11 +91,11 @@ You can use each of these fields nested inside a structure, or on their own. For
 
 ### Bitfield types
 
-These fields are intended for use *only* within a parent `_.struct` field:
+These fields are intended for use *only* within a parent `_.struct` field (and therefore `name` is not optional):
 
-- `_.bool(name, count)` — A single bit, read back as a boolean. [**TBD**] This field *can* be used in array form.
-- `_.ubit(name, width)` — An unsigned integer; most significant bit first.
-- `_.sbit(name, width)` — A signed integer; if the most sigificant bit is set the value is negative.
+- `_.bool(name, count)` — A single bit, read back as a boolean.
+- `_.ubit(name, width, count)` — An unsigned integer; most significant bit first.
+- `_.sbit(name, width, count)` — A signed integer; if the most sigificant bit is set the value is negative.
 
 Except for the `bitfield.name` and `bitfield.width` properties, the bitfield interface (used internally by `_.struct`) is undocumented and subject to change.
 
