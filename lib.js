@@ -24,7 +24,7 @@ function arrayizeField(f, count) {
             var off = {bytes:0, bits:0};
             for (var idx = 0, len = arr.length; idx < len; idx += 1) {
                 var value = arr[idx],
-                    bytes = buf.slice(off.bytes, off.bytes+4);
+                    bytes = buf.slice(off.bytes);
                 f._bitsFromValue(value, bytes, off.bits);
                 addBits(off, f.width);
             }
@@ -94,7 +94,7 @@ _.struct = function (name, fields, count) {
             fields.forEach(function (f) {
                 var value;
                 if ('width' in f) {
-                    var bytes = buf.slice(off.bytes, off.bytes+4);
+                    var bytes = buf.slice(off.bytes);
                     value = f._valueFromBits(bytes, off.bits);
                     addBits(off, f.width);
                 } else {
@@ -115,7 +115,7 @@ _.struct = function (name, fields, count) {
             fields.forEach(function (f) {
                 var value = (f.name) ? obj[f.name] : obj;
                 if ('width' in f) {
-                    var bytes = buf.slice(off.bytes, off.bytes+4);
+                    var bytes = buf.slice(off.bytes);
                     f._bitsFromValue(value, bytes, off.bits);
                     addBits(off, f.width);
                 } else {
