@@ -5,67 +5,51 @@ if (Buffer([255]).readUInt32BE(0, true) !== 0xff000000 || Buffer(0).readUInt32BE
     throw Error("Runtime incompatibility! Bitfield logic assumes 0-padded reads off end of buffer.");
 }
 
-function arrayizeField(f, count) {
-    return (count) ? (('width' in f) ? {
-        _valueFromBits: function (buf, bit) {
-            var arr = new Array(count),
-                off = {bytes:0, bits:bit};
-            for (var idx = 0, len = arr.length; idx < len; idx += 1) {
-                var bytes = buf.slice(off.bytes),
-                    value = f._valueFromBits(bytes, off.bits);
-                addBits(off, f.width);
-                arr[idx] = value;
-            }
-            return arr;
-        },
-        _bitsFromValue: function (arr, buf) {
-            arr || (arr = new Array(count));
-            buf || (buf = new Buffer(this.size));
-            var off = {bytes:0, bits:0};
-            for (var idx = 0, len = arr.length; idx < len; idx += 1) {
-                var value = arr[idx],
-                    bytes = buf.slice(off.bytes);
-                f._bitsFromValue(value, bytes, off.bits);
-                addBits(off, f.width);
-            }
-            return buf;
-        },
-        width: f.width * count,
-        name: f.name
-    } : {
-        valueFromBytes: function (buf) {
-            var arr = new Array(count),
-                off = {bytes:0, bits:0};
-            for (var idx = 0, len = arr.length; idx < len; idx += 1) {
-                var bytes = buf.slice(off.bytes, off.bytes += f.size),
-                    value = f.valueFromBytes(bytes);
-                arr[idx] = value;
-            }
-            return arr;
-        },
-        bytesFromValue: function (arr, buf) {
-            arr || (arr = new Array(count));
-            buf || (buf = new Buffer(this.size));
-            var off = {bytes:0, bits:0};
-            for (var idx = 0, len = arr.length; idx < len; idx += 1) {
-                var value = arr[idx],
-                    bytes = buf.slice(off.bytes, off.bytes += f.size);
-                f.bytesFromValue(value, bytes);
-            }
-            return buf;
-        },
-        size: f.size,
-        name: f.name
-    }) : f;
+function extend(obj) {
+    Array.prototype.slice.call(arguments, 1).forEach(function (ext) {
+        Object.keys(ext).forEach(function (key) {
+            obj[key] = ext[key];
+        });
+    });
+    return obj;
 }
 
-
-function addBits(ctr, n) {
-    ctr.bits += n;
-    while (ctr.bits > 7) {
-        ctr.bytes += 1;
-        ctr.bits -= 8;
+function addField(ctr, f) {
+    if ('width' in f) {
+        ctr.bits += f.width;
+        while (ctr.bits > 7) {
+            ctr.bytes += 1;
+            ctr.bits -= 8;
+        }
+    } else if (!ctr.bits) {
+        ctr.bytes += f.size;
+    } else {
+        throw Error("Improperly aligned bitfield before field: "+f.name);
     }
+    return ctr;
+}
+
+function arrayizeField(f, count) {
+    return (count) ? extend({
+        name: f.name,
+        valueFromBytes: function (buf, off) {
+            off || (off = {bytes:0, bits:0});
+            var arr = new Array(count);
+            for (var idx = 0, len = arr.length; idx < len; idx += 1) {
+                arr[idx] = f.valueFromBytes(buf, off);
+            }
+            return arr;
+        },
+        bytesFromValue: function (arr, buf, off) {
+            arr || (arr = new Array(count));
+            buf || (buf = new Buffer(this.size));
+            off || (off = {bytes:0, bits:0});
+            for (var idx = 0, len = arr.length; idx < len; idx += 1) {
+                f.bytesFromValue(arr[idx], buf, off);
+            }
+            return buf;
+        }
+    }, ('width' in f) ? {width: f.width * count} : {size: f.size * count}) : f;
 }
 
 _.struct = function (name, fields, count) {
@@ -75,53 +59,27 @@ _.struct = function (name, fields, count) {
         name = null;
     }
     
-    var fieldsSum = fields.reduce(function (sum,f) {
-        if ('width' in f) {
-            addBits(sum, f.width);
-        } else if (!sum.bits) {
-            sum.bytes += f.size;
-        } else {
-            throw Error("Improperly aligned bitfield before field: "+f.name);
-        }
-        return sum;
-    }, {bytes:0, bits:0});
+    var fieldsSum = fields.reduce(addField, {bytes:0, bits:0});
     if (fieldsSum.bits) throw Error("Improperly aligned bitfield at end of struct: "+name);
     
     return arrayizeField({
-        valueFromBytes: function (buf) {
-            var obj = new Object(),
-                off = {bytes:0, bits:0};
+        valueFromBytes: function (buf, off) {
+            off || (off = {bytes:0, bits:0});
+            var obj = new Object();
             fields.forEach(function (f) {
-                var value;
-                if ('width' in f) {
-                    var bytes = buf.slice(off.bytes);
-                    value = f._valueFromBits(bytes, off.bits);
-                    addBits(off, f.width);
-                } else {
-                    var bytes = buf.slice(off.bytes, off.bytes += f.size);
-                    value = f.valueFromBytes(bytes);
-                }
+                var value = f.valueFromBytes(buf, off);
                 if (f.name) obj[f.name] = value;
-                else if (typeof value === 'object') Object.keys(value).forEach(function (k) {
-                    obj[k] = value[k];
-                });
+                else if (typeof value === 'object') extend(obj, value);
             });
             return obj;
         },
-        bytesFromValue: function (obj, buf) {
+        bytesFromValue: function (obj, buf, off) {
             obj || (obj = {});
             buf || (buf = new Buffer(this.size));
-            var off = {bytes:0, bits:0};
+            off || (off = {bytes:0, bits:0});
             fields.forEach(function (f) {
                 var value = (f.name) ? obj[f.name] : obj;
-                if ('width' in f) {
-                    var bytes = buf.slice(off.bytes);
-                    f._bitsFromValue(value, bytes, off.bits);
-                    addBits(off, f.width);
-                } else {
-                    var bytes = buf.slice(off.bytes, off.bytes += f.size);
-                    f.bytesFromValue(value, bytes);
-                }
+                f.bytesFromValue(value, buf, off);
             });
             return buf;
         },
@@ -141,22 +99,26 @@ function bitfield(name, width, count) {
     var impl = this,
         mask = FULL >>> (32 - width);
     return arrayizeField({
-        _valueFromBits: function (buf, bit) {
-            var end = bit + width,
-                word = buf.readUInt32BE(0, true),
+        valueFromBytes: function (buf, off) {
+            off || (off = {bytes:0, bits:0});
+            var end = off.bits + width,
+                word = buf.readUInt32BE(off.bytes, true),
                 over = word >>> (32 - end);
+            addField(off, this);
             return impl.b2v(over & mask);
         },
-        _bitsFromValue: function (val, buf, bit) {
-            val || (val = 0);
-            val = impl.v2b(val);
-            var end = bit + width,
-                word = buf.readUInt32BE(0,true),
+        bytesFromValue: function (val, buf, off) {
+            val = impl.v2b(val || 0);
+            off || (off = {bytes:0, bits:0});
+            var end = off.bits + width,
+                word = buf.readUInt32BE(off.bytes, true),
                 zero = mask << (32 - end),
                 over = (val & mask) << (32 - end);
             word &= ~zero;
             word |= over;
-            buf.writeUInt32BE(word, 0, true);
+            buf.writeUInt32BE(word, off.bytes, true);
+            addField(off, this);
+            return buf;
         },
         width: width,
         name: name
@@ -186,17 +148,22 @@ _.byte = function (name, size, count) {
         name = null;
     }
     return arrayizeField({
-        valueFromBytes: function (buf) {
-            return buf;
+        valueFromBytes: function (buf, off) {
+            off || (off = {bytes:0, bits:0});
+            var val = buf.slice(off.bytes, off.bytes+this.size);
+            addField(off, this);
+            return val;
         },
-        bytesFromValue: function (val, buf) {
+        bytesFromValue: function (val, buf, off) {
             if (!val) {
                 val = new Buffer(this.size);
                 val.fill(0);
             }
+            off || (off = {bytes:0});
             buf || (buf = new Buffer(this.size));
-            val.copy(buf, 0, 0, this.size);
-            if (val.length < this.size) buf.fill(0, val.length);
+            val.copy(buf, off.bytes, 0, this.size);
+            if (val.length < this.size) buf.fill(0, off.bytes+val.length, off.bytes+this.size);
+            addField(off, this);
             return buf;
         },
         size: size,
@@ -211,16 +178,20 @@ _.char = function (name, size, count) {
         name = null;
     }
     return arrayizeField({
-        valueFromBytes: function (buf) {
-            var val = buf.toString(),
+        valueFromBytes: function (buf, off) {
+            off || (off = {bytes:0});
+            var val = buf.slice(off.bytes, off.bytes+this.size).toString(),
                 nul = val.indexOf('\0');
+            addField(off, this);
             return (~nul) ? val.slice(0, nul) : val;
         },
-        bytesFromValue: function (str, buf) {
+        bytesFromValue: function (str, buf, off) {
             str || (str = '');
             buf || (buf = new Buffer(this.size));
-            var off = buf.write(str, 0, this.size);
-            if (off < this.size) buf.fill(0, off);
+            off || (off = {bytes:0});
+            var strlen = buf.write(str, off.bytes, this.size);
+            if (strlen < this.size) buf.fill(0, off.bytes+strlen, off.bytes+this.size);
+            addField(off, this);
             return buf;
         },
         size: size,
@@ -238,13 +209,18 @@ function standardField(sig, size) {
             name = null;
         }
         return arrayizeField({
-            valueFromBytes: function (buf) {
-                return buf[read](0);
+            valueFromBytes: function (buf, off) {
+                off || (off = {bytes:0});
+                var val = buf[read](off.bytes);
+                addField(off, this);
+                return val;
             },
-            bytesFromValue: function (val, buf) {
+            bytesFromValue: function (val, buf, off) {
                 val || (val = 0);
                 buf || (buf = new Buffer(this.size));
-                buf[dump](val, 0);
+                off || (off = {bytes:0});
+                buf[dump](val, off.bytes);
+                addField(off, this);
                 return buf;
             },
             size: size,
