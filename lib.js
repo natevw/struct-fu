@@ -16,7 +16,7 @@ function extend(obj) {
 
 function addField(ctr, f) {
     if ('width' in f) {
-        ctr.bits += f.width;
+        ctr.bits = (ctr.bits || 0) + f.width;
         while (ctr.bits > 7) {
             ctr.bytes += 1;
             ctr.bits -= 8;
