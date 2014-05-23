@@ -32,6 +32,7 @@ function addField(ctr, f) {
 function arrayizeField(f, count) {
     return (count) ? extend({
         name: f.name,
+        field: f,
         valueFromBytes: function (buf, off) {
             off || (off = {bytes:0, bits:0});
             var arr = new Array(count);
@@ -59,8 +60,18 @@ _.struct = function (name, fields, count) {
         name = null;
     }
     
-    var fieldsSum = fields.reduce(addField, {bytes:0, bits:0});
-    if (fieldsSum.bits) throw Error("Improperly aligned bitfield at end of struct: "+name);
+    var _size = {bytes:0, bits:0},
+        fieldsObj = fields.reduce(function (obj, f) {
+            if (f.name) {
+                f = Object.create(f);           // local overrides
+                f.offset = ('width' in f) ? {bytes:_size.bytes,bits:_size.bits} : _size.bytes,
+                obj[f.name] = f;
+            }
+            // TODO: mirror "hoisting" of anonymous nested struct fields like below
+            addField(_size, f);
+            return obj;
+        }, {});
+    if (_size.bits) throw Error("Improperly aligned bitfield at end of struct: "+name);
     
     return arrayizeField({
         valueFromBytes: function (buf, off) {
@@ -83,7 +94,8 @@ _.struct = function (name, fields, count) {
             });
             return buf;
         },
-        size: fieldsSum.bytes,
+        fields: fieldsObj,
+        size: _size.bytes,
         name: name
     }, count);
 };

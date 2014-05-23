@@ -89,6 +89,48 @@ All the field above implement the same interface once created:
 
 You can use each of these fields nested inside a structure, or on their own. For example, `_.uint32(2).valueFromBytes(Buffer(8))` uses an anonymous field to convert the unitialized buffer into an array of two somewhat-random numbers.
 
+### Extended field interfaces
+
+The basic field (and bitfield) interface gets extended in several cases:
+
+- `arrayField.field` — if a field was created with a `count`, this property holds a reference to the "original" field.
+— `structField.fields` — for a field of type `_.struct`, this property is an object giving you access to nested fields by name
+— `nestedField.offset` — a field fetched via `structField.fields` will have an offset property. For normal fields this is a number given in bytes; for bitfield types (see below) this will be an object with separate `bytes` and `bits` properties. (Note that you can reuse a field within multiple structures and it will have the correct offset within each. The `nestedField` found in each `structField.fields` is actually a **new** object whose *prototype* is the original (reused) field.)
+
+Taken together, these special properties allow you to do things like:
+
+```js
+var _ = require('struct-fu');
+var itemList = _.struct([
+    _.char("name", 24),
+    _.struct("ownerName", [
+        _.char("first", 12),
+        _.char("last", 42)
+    ]),
+    _.struct("flags", [
+        _.bool("isBorrowed"),
+        _.bool("needsRepair"),
+        _.ubit('_reserved', 6)
+    ]),
+    _.uint16("howMany")
+], 16);
+
+var itemType = itemList.field,
+    countField = itemType.fields['howMany'],
+    ownerField = itemType.fields['ownerName'];
+console.log("Each item has fields:", Object.keys(itemType.fields).join(', '));
+console.log("Within an item, count is at offset:", countField.offset);
+console.log("Here is an owner name converted on its own:", ownerField.bytesFromValue({first:"Foorenious", last:"Barçuno"}));
+```
+
+This will output:
+
+> Each item has fields: name, ownerName, flags, howMany
+>
+> Within an item, count is at offset: 79
+>
+> Here is an owner name converted on its own: \<Buffer 46 6f 6f 72 65 6e 69 6f 75 73 00 00 42 61 72 c3 a7 75 6e 6f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ...>
+
 
 ### Bitfield types
 
