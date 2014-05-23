@@ -141,63 +141,66 @@ _.sbit = bitfield.bind({        // TODO: handle sign bit…
     v2b: function (v) { return v; }
 });
 
-_.byte = function (name, size, count) {
+
+function bytefield(name, size, count) {
     if (typeof name !== 'string') {
         count = size;
         size = name;
         name = null;
     }
+    var impl = this;
     return arrayizeField({
         valueFromBytes: function (buf, off) {
             off || (off = {bytes:0, bits:0});
             var val = buf.slice(off.bytes, off.bytes+this.size);
             addField(off, this);
-            return val;
+            return impl.b2v(val);
         },
         bytesFromValue: function (val, buf, off) {
-            if (!val) {
-                val = new Buffer(this.size);
-                val.fill(0);
-            }
             off || (off = {bytes:0});
             buf || (buf = new Buffer(this.size));
-            val.copy(buf, off.bytes, 0, this.size);
-            if (val.length < this.size) buf.fill(0, off.bytes+val.length, off.bytes+this.size);
+            var blk = buf.slice(off.bytes, off.bytes+this.size),
+                len = impl.vTb(val, blk);
+            if (len < blk.length) blk.fill(0, len);
             addField(off, this);
             return buf;
         },
-        size: size,
+        size: size * (impl.size || 1),
         name: name
     }, count);
-};
+}
 
-_.char = function (name, size, count) {
-    if (typeof name !== 'string') {
-        count = size;
-        size = name;
-        name = null;
+
+_.byte = bytefield.bind({
+    b2v: function (b) { return b; },
+    vTb: function (v,b) { if (!v) return 0; v.copy(b); return v.length; }
+});
+
+_.char = bytefield.bind({
+    b2v: function (b) {
+        var v = b.toString('utf8'),
+            z = v.indexOf('\0');
+        return (~z) ? v.slice(0, z) : v;
+    },
+    vTb: function (v,b) {
+        v || (v = '');
+        return b.write(v, 'utf8');
     }
-    return arrayizeField({
-        valueFromBytes: function (buf, off) {
-            off || (off = {bytes:0});
-            var val = buf.slice(off.bytes, off.bytes+this.size).toString(),
-                nul = val.indexOf('\0');
-            addField(off, this);
-            return (~nul) ? val.slice(0, nul) : val;
-        },
-        bytesFromValue: function (str, buf, off) {
-            str || (str = '');
-            buf || (buf = new Buffer(this.size));
-            off || (off = {bytes:0});
-            var strlen = buf.write(str, off.bytes, this.size);
-            if (strlen < this.size) buf.fill(0, off.bytes+strlen, off.bytes+this.size);
-            addField(off, this);
-            return buf;
-        },
-        size: size,
-        name: name
-    }, count);
-};
+});
+
+_.char16 = bytefield.bind({
+    size: 2,
+    b2v: function (b) {
+        var v = b.toString('utf16le'),
+            z = v.indexOf('\0');
+        return (~z) ? v.slice(0, z) : v;
+    },
+    vTb: function (v,b) {
+        v || (v = '');
+        return b.write(v, 'utf16le');
+    }
+});
+
 
 function standardField(sig, size) {
     var read = 'read'+sig,
