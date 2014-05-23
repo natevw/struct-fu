@@ -1,6 +1,6 @@
 # struct-fu
 
-[Yet another] buffer layout helper, sort of like `typedef struct foo` for JavaScript.
+Convert between JSON and binary according to a given field layout/structure declaration. `struct-fu` is [yet another] buffer reading/writing helper; sort of like `typedef struct foo` for JavaScript.
 
 
 ## Installation
