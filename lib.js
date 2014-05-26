@@ -10,6 +10,13 @@ if (Buffer([255]).readUInt32BE(0, true) !== 0xff000000) {
 // WORKAROUND: https://github.com/tessel/beta/issues/358
 if (!Buffer.prototype.write) require("./_workaround_tessel_358.js");
 
+// flag for WORKAROUND: https://github.com/tessel/beta/issues/380
+var workaroundTessel380 = function () {
+    var b = Buffer([0]),
+        s = b.slice(0);
+    return ((s[0] = 0xFF) !== b[0]);
+}();
+
 
 function extend(obj) {
     Array.prototype.slice.call(arguments, 1).forEach(function (ext) {
@@ -180,6 +187,8 @@ function bytefield(name, size, count) {
             var blk = buf.slice(off.bytes, off.bytes+this.size),
                 len = impl.vTb(val, blk);
             if (len < blk.length) blk.fill(0, len);
+            // WORKAROUND: https://github.com/tessel/beta/issues/380
+            if (workaroundTessel380) blk.copy(buf, off.bytes);
             addField(off, this);
             return buf;
         },
