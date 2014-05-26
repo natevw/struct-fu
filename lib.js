@@ -1,9 +1,15 @@
 var _ = {};
 
 
-if (Buffer([255]).readUInt32BE(0, true) !== 0xff000000 || Buffer(0).readUInt32BE(9999, true) !== 0) {
+// avoid https://github.com/tessel/beta/issues/379 for now — should only affect us if our callers pass too short a buffer
+//if (Buffer([255]).readUInt32BE(0, true) !== 0xff000000 || Buffer(0).readUInt32BE(9999, true) !== 0) {
+if (Buffer([255]).readUInt32BE(0, true) !== 0xff000000) {
     throw Error("Runtime incompatibility! Bitfield logic assumes 0-padded reads off end of buffer.");
 }
+
+// WORKAROUND: https://github.com/tessel/beta/issues/358
+if (!Buffer.prototype.write) require("./_workaround_tessel_358.js");
+
 
 function extend(obj) {
     Array.prototype.slice.call(arguments, 1).forEach(function (ext) {
