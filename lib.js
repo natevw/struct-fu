@@ -173,6 +173,7 @@ function bytefield(name, size, count) {
         size = name;
         name = null;
     }
+    size || (size = 1);
     var impl = this;
     return arrayizeField({
         valueFromBytes: function (buf, off) {
