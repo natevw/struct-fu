@@ -74,13 +74,18 @@ _.struct = function (name, fields, count) {
     }
     
     var _size = {bytes:0, bits:0},
-        fieldsObj = fields.reduce(function (obj, f) {
-            if (f.name) {
+        fieldsObj = fields.reduce(function (obj, f, i) {
+            if (f._hoistFields) Object.keys(f._hoistFields).forEach(function (name) {
+                var _f = Object.create(f._hoistFields[name]);
+                if ('width' in _f) _f.offset = {bytes:_f.offset.bytes+_size.bytes, bits:_f.offset.bits};
+                else _f.offset += _size.bytes;
+                obj[name] = _f;
+            });
+            else if (f.name) {
                 f = Object.create(f);           // local overrides
                 f.offset = ('width' in f) ? {bytes:_size.bytes,bits:_size.bits} : _size.bytes,
                 obj[f.name] = f;
             }
-            // TODO: mirror "hoisting" of anonymous nested struct fields like below
             addField(_size, f);
             return obj;
         }, {});
@@ -107,6 +112,7 @@ _.struct = function (name, fields, count) {
             });
             return buf;
         },
+        _hoistFields: (!name) ? fieldsObj : null,
         fields: fieldsObj,
         size: _size.bytes,
         name: name
