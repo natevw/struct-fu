@@ -132,7 +132,7 @@ function bitfield(name, width, count) {
     return arrayizeField({
         valueFromBytes: function (buf, off) {
             off || (off = {bytes:0, bits:0});
-            var end = off.bits + width,
+            var end = (off.bits || 0) + width,
                 word = buf.readUInt32BE(off.bytes, true),
                 over = word >>> (32 - end);
             addField(off, this);
@@ -141,7 +141,7 @@ function bitfield(name, width, count) {
         bytesFromValue: function (val, buf, off) {
             val = impl.v2b(val || 0);
             off || (off = {bytes:0, bits:0});
-            var end = off.bits + width,
+            var end = (off.bits || 0) + width,
                 word = buf.readUInt32BE(off.bytes, true),
                 zero = mask << (32 - end),
                 over = (val & mask) << (32 - end);
