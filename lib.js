@@ -222,7 +222,7 @@ _.char = bytefield.bind({
     }
 });
 
-_.char16 = bytefield.bind({
+_.char16le = bytefield.bind({
     size: 2,
     b2v: function (b) {
         var v = b.toString('utf16le'),
