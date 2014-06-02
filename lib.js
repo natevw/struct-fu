@@ -199,7 +199,7 @@ function bytefield(name, size, count) {
             addField(off, this);
             return buf;
         },
-        size: size * (impl.size || 1),
+        size: size,
         name: name
     }, count);
 }
@@ -223,7 +223,6 @@ _.char = bytefield.bind({
 });
 
 _.char16le = bytefield.bind({
-    size: 2,
     b2v: function (b) {
         var v = b.toString('utf16le'),
             z = v.indexOf('\0');
