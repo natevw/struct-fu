@@ -66,7 +66,7 @@ if (workaroundTessel426) Buffer.prototype.toString = function (enc) {
             if (0xD800 <= unichar && unichar < 0xE000) {
                 if (unichar < 0xDC00) tmp = unichar - 0xD800;
                 else arr.push(0x010000 + (tmp << 10) + (unichar - 0xDC00));
-            }
+            } else arr.push(unichar);
         }
         buf = Buffer(buf.length << 1);
         tmp = buf.write({
