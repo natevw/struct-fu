@@ -7,8 +7,8 @@ if (Buffer([255]).readUInt32BE(0, true) !== 0xff000000) {
     throw Error("Runtime incompatibility! Bitfield logic assumes 0-padded reads off end of buffer.");
 }
 
-// WORKAROUND: https://github.com/tessel/beta/issues/358
-if (!Buffer.prototype.write) require("./_workaround_tessel_358.js");
+// WORKAROUND: https://github.com/tessel/beta/issues/426 [sic]
+if (Buffer("\ud83c\udf91", 'utf16le')[0] !== 0x3c) require("./_workaround_tessel_358.js");
 
 // flag for WORKAROUND: https://github.com/tessel/beta/issues/380
 var workaroundTessel380 = function () {

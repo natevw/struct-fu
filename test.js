@@ -68,4 +68,22 @@ assert(obj1.reserved[1][0] === 0, "Reserved array buffer passes content sniff te
 assert(obj1.time.hour === 0, "Hour value as expected");
 assert(obj1.cluster === 0, "Cluster value as expected");
 assert(obj1.filesize === 0, "Filesize value as expected");
+console.log("  = Unicode check = ");
+var str = "\ud83c\udf91",
+    ucs = _.char16le(4),
+    b16 = ucs.bytesFromValue(str);
+console.log(b16);
+assert(b16[0] === 0x3c, "UTF-16 byte 0 as expected");
+assert(b16[1] === 0xd8, "UTF-16 byte 1 as expected");
+assert(b16[2] === 0x91, "UTF-16 byte 2 as expected");
+assert(b16[3] === 0xdf, "UTF-16 byte 3 as expected");
+assert(ucs.valueFromBytes(b16) === str, "UTF-16 converted back correctly.");
+//var utf = _.char(4),
+//    b_8 = utf.bytesFromValue(str);
+//console.log(b_8);
+//assert(b_8[0] === 0xF0, "UTF-8 byte 0 as expected");
+//assert(b_8[1] === 0x9F, "UTF-8 byte 1 as expected");
+//assert(b_8[2] === 0x8E, "UTF-8 byte 2 as expected");
+//assert(b_8[3] === 0x91, "UTF-8 byte 3 as expected");
+//assert(utf.valueFromBytes(b_8) === str, "UTF-8 converted back correctly.");
 console.log("\nAll tests passed!");

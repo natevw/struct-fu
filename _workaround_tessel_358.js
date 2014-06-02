@@ -1,4 +1,8 @@
-// NOTE: only used as a workaround for https://github.com/tessel/beta/issues/358
+// NOTE: was a workaround for https://github.com/tessel/beta/issues/358
+//       …and now worksaround https://github.com/tessel/beta/issues/426
+
+var workaroundTessel426 = ("\ud83c\udf91".length !== 2),
+    fixString = require("./8to16.js").fixString;
 
 Buffer.prototype.write = function (str, off, len, enc) {
     var buf = this;
@@ -13,6 +17,8 @@ Buffer.prototype.write = function (str, off, len, enc) {
     var _maxLen = buf.length - off;
     len = (typeof len === 'number') ? Math.min(len, _maxLen) : _maxLen;
     enc || (enc = 'utf8');
+    
+    if (workaroundTessel426) str = fixString(str);
     
     var b = off,
         s = 0, sl = str.length; 
@@ -33,6 +39,13 @@ Buffer.prototype.write = function (str, off, len, enc) {
                 buf[b++] = 0x80 | ((c >>> 6) & 0x3F);
                 buf[b++] = 0x80 | (c & 0x3F);
             } else break;
+        } else if (c < 0x110000) {            // NOTE: this one is only used by `toString` workaround…
+            if (b+3 < len) {
+                buf[b++] = 0xf0 | (c >>> 18);
+                buf[b++] = 0x80 | ((c >>> 12) & 0x3F);
+                buf[b++] = 0x80 | ((c >>> 6) & 0x3F);
+                buf[b++] = 0x80 | (c & 0x3F);
+            } else break;
         } else throw Error(["IT BROKT",c.toString(16), JSON.stringify(str), s].join(' '));
         s += 1;
     } else if (enc === 'utf16le' || enc === 'ucs2') while (b+1 < len && s < sl) {
@@ -42,4 +55,25 @@ Buffer.prototype.write = function (str, off, len, enc) {
     }
     Buffer._charsWritten = s;
     return b - off;
-}
+};
+
+var _toString = Buffer.prototype.toString;
+if (workaroundTessel426) Buffer.prototype.toString = function (enc) {
+    if (enc === 'utf16le' || enc === 'ucs2') {
+        var buf = this, arr = [], tmp;
+        for (var i = 0, len = buf.length >>> 1; i < len; ++i) {
+            var unichar = buf.readUInt16LE(i << 1);
+            if (0xD800 <= unichar && unichar < 0xE000) {
+                if (unichar < 0xDC00) tmp = unichar - 0xD800;
+                else arr.push(0x010000 + (tmp << 10) + (unichar - 0xDC00));
+            }
+        }
+        buf = Buffer(buf.length << 1);
+        tmp = buf.write({
+            _fixed: true,
+            length: arr.length,
+            charCodeAt: function (i) { return arr[i]; }
+        });
+        return buf.slice(0, tmp).toString();
+    } else return _toString.apply(this, arguments);
+};

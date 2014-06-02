@@ -1,6 +1,6 @@
 {
   "name": "struct-fu",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Yet another node.js struct implementation (object↔︎buffer conversion) ",
   "main": "lib.js",
   "scripts": {
@@ -19,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/natevw/struct-fu/issues"
   },
-  "homepage": "https://github.com/natevw/struct-fu"
+  "homepage": "https://github.com/natevw/struct-fu",
+  "devDependencies": {
+    "utf8": "^2.0.0"
+  }
 }
