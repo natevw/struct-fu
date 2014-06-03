@@ -39,6 +39,7 @@ console.log('',obj0, "\n==>\n", obj1);
 
 console.log("\nRunning tests.");
 function assert(b,msg) { if (!b) throw Error("Assertion failure. "+msg); else console.log(msg); }
+
 console.log("  = API check =  ");
 assert('fields' in entry, "Entry has fields property.");
 assert('reserved' in entry.fields, "Entry fields contain 'reserved' bytefield.");
@@ -50,12 +51,14 @@ assert('field' in entry.fields.reserved, "Reserved array allows access to underl
 assert(!('offset' in entry.fields.reserved.field), "Reserved array's underlying field does not have an offset…");
 assert(entry.fields.reserved.offset === 12, "…but reserved array field itself does, and said offset is correct.");
 assert(entry.fields.reserved2.offset.bytes === 21, "Hoisted field 'reserved2' has correct offset.");
+
 console.log("  = Write check =  ");
 var _bufKnown = new Buffer("6175746f65786563626174a00000000000000000000000000000000000000000", 'hex');
 assert(_bufKnown.length === 32, "Runtime parsed known buffer as 'hex'.");
 assert(_bufKnown[0] === 0x61 && _bufKnown[7] === 0x63 && _bufKnown[31] === 0, "Known buffer parse passes spot check.");
 assert(_buf.length === _bufKnown.length, "Buffer size matches");
 for (var i = 0, len = _buf.length; i < len; ++i) assert(_buf[i] === _bufKnown[i], "Buffer contents match at "+i);
+
 console.log("  = Read checks =  ");
 assert(obj1.filename === obj0.filename, "Filename field matches");
 assert(obj1.extension === obj0.extension.slice(0,3), "(Truncated) extension matches");
@@ -68,11 +71,11 @@ assert(obj1.reserved[1][0] === 0, "Reserved array buffer passes content sniff te
 assert(obj1.time.hour === 0, "Hour value as expected");
 assert(obj1.cluster === 0, "Cluster value as expected");
 assert(obj1.filesize === 0, "Filesize value as expected");
+
 console.log("  = Unicode check = ");
 var str = "\ud83c\udf91",
     ucs = _.char16le(4),
     b16 = ucs.bytesFromValue(str);
-console.log(b16);
 assert(b16[0] === 0x3c, "UTF-16 byte 0 as expected");
 assert(b16[1] === 0xd8, "UTF-16 byte 1 as expected");
 assert(b16[2] === 0x91, "UTF-16 byte 2 as expected");
@@ -86,4 +89,13 @@ assert(ucs.valueFromBytes(b16) === str, "UTF-16 converted back correctly.");
 //assert(b_8[2] === 0x8E, "UTF-8 byte 2 as expected");
 //assert(b_8[3] === 0x91, "UTF-8 byte 3 as expected");
 //assert(utf.valueFromBytes(b_8) === str, "UTF-8 converted back correctly.");
+
+console.log("  = Bitfield check = ");
+var bitle = _.struct([
+    _.ubitLE('n', 8)
+]), bufle = bitle.bytesFromValue({n:0x02});
+assert(bufle.length === 1, "ubitLE buffer has correct size.");
+assert(bufle[0] === 0x40, "ubitLE buffer has correct value.");
+assert(bitle.valueFromBytes(bufle).n === 0x02, "ubitLE conversion back has original value.");
+
 console.log("\nAll tests passed!");

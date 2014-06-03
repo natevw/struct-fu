@@ -136,10 +136,10 @@ function bitfield(name, width, count) {
                 word = buf.readUInt32BE(off.bytes, true),
                 over = word >>> (32 - end);
             addField(off, this);
-            return impl.b2v(over & mask);
+            return impl.b2v.call(this, over & mask);
         },
         bytesFromValue: function (val, buf, off) {
-            val = impl.v2b(val || 0);
+            val = impl.v2b.call(this, val || 0);
             off || (off = {bytes:0, bits:0});
             var end = (off.bits || 0) + width,
                 word = buf.readUInt32BE(off.bytes, true),
@@ -154,7 +154,18 @@ function bitfield(name, width, count) {
         width: width,
         name: name
     }, count);
-};
+}
+
+function swapBits(n, w) {
+    var o = 0;
+    while (w--) {
+        o <<= 1;
+        o |= n & 1;
+        n >>>= 1;
+    }
+    return o;
+}
+
 
 _.bool = function (name, count) {
     return bitfield.call({
@@ -166,6 +177,10 @@ _.bool = function (name, count) {
 _.ubit = bitfield.bind({
     b2v: function (b) { return b; },
     v2b: function (v) { return v; }
+});
+_.ubitLE = bitfield.bind({
+    b2v: function (b) { return swapBits(b, this.width); },
+    v2b: function (v) { return swapBits(v, this.width); }
 });
 _.sbit = bitfield.bind({        // TODO: handle sign bit…
     b2v: function (b) { return b; },
@@ -186,13 +201,13 @@ function bytefield(name, size, count) {
             off || (off = {bytes:0, bits:0});
             var val = buf.slice(off.bytes, off.bytes+this.size);
             addField(off, this);
-            return impl.b2v(val);
+            return impl.b2v.call(this, val);
         },
         bytesFromValue: function (val, buf, off) {
             off || (off = {bytes:0});
             buf || (buf = new Buffer(this.size));
             var blk = buf.slice(off.bytes, off.bytes+this.size),
-                len = impl.vTb(val, blk);
+                len = impl.vTb.call(this, val, blk);
             if (len < blk.length) blk.fill(0, len);
             // WORKAROUND: https://github.com/tessel/beta/issues/380
             if (workaroundTessel380) blk.copy(buf, off.bytes);
