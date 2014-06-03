@@ -183,8 +183,16 @@ _.ubitLE = bitfield.bind({
     v2b: function (v) { return swapBits(v, this.width); }
 });
 _.sbit = bitfield.bind({        // TODO: handle sign bit…
-    b2v: function (b) { return b; },
-    v2b: function (v) { return v; }
+    b2v: function (b) {
+        var m = 1 << (this.width-1),
+            s = b & m;
+        return (s) ? -(b &= ~m) : b;
+    },
+    v2b: function (v) {
+        var m = 1 << (this.width-1),
+            s = (v < 0);
+        return (s) ? (-v | m) : v;
+    }
 });
 
 

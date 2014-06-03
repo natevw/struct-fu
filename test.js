@@ -81,14 +81,14 @@ assert(b16[1] === 0xd8, "UTF-16 byte 1 as expected");
 assert(b16[2] === 0x91, "UTF-16 byte 2 as expected");
 assert(b16[3] === 0xdf, "UTF-16 byte 3 as expected");
 assert(ucs.valueFromBytes(b16) === str, "UTF-16 converted back correctly.");
-//var utf = _.char(4),
-//    b_8 = utf.bytesFromValue(str);
+var utf = _.char(4),
+    b_8 = utf.bytesFromValue(str);
 //console.log(b_8);
-//assert(b_8[0] === 0xF0, "UTF-8 byte 0 as expected");
-//assert(b_8[1] === 0x9F, "UTF-8 byte 1 as expected");
-//assert(b_8[2] === 0x8E, "UTF-8 byte 2 as expected");
-//assert(b_8[3] === 0x91, "UTF-8 byte 3 as expected");
-//assert(utf.valueFromBytes(b_8) === str, "UTF-8 converted back correctly.");
+assert(b_8[0] === 0xF0, "UTF-8 byte 0 as expected");
+assert(b_8[1] === 0x9F, "UTF-8 byte 1 as expected");
+assert(b_8[2] === 0x8E, "UTF-8 byte 2 as expected");
+assert(b_8[3] === 0x91, "UTF-8 byte 3 as expected");
+assert(utf.valueFromBytes(b_8) === str, "UTF-8 converted back correctly.");
 
 console.log("  = Bitfield check = ");
 var bitle = _.struct([
@@ -98,4 +98,21 @@ assert(bufle.length === 1, "ubitLE buffer has correct size.");
 assert(bufle[0] === 0x40, "ubitLE buffer has correct value.");
 assert(bitle.valueFromBytes(bufle).n === 0x02, "ubitLE conversion back has original value.");
 
+var bitzz = _.struct([
+    _.bool('a'),
+    _.ubit('b', 3),
+    _.ubitLE('c', 3),
+    _.sbit('d', 9)
+]), bufzz = bitzz.bytesFromValue({a:true, b:1, c:1, d:-2}), backzz = bitzz.valueFromBytes(bufzz);
+assert(bufzz.length === 2, "Bitfield buffer has correct size.");
+//console.log((0x100+bufzz[0]).toString(2).slice(1), (0x100+bufzz[1]).toString(2).slice(1));
+assert((bufzz[0] & 0x80) >>> 7 === 1, "Bitfield bool stored correctly.");
+assert((bufzz[0] & 0x70) >>> 4 === 1, "Bitfield ubit stored correctly.");
+assert((bufzz[0] & 0x0E) >>> 1 === 4, "Bitfield ubitLE stored correctly.");
+assert((bufzz[0] & 0x01) >>> 0 === 1, "Bitfield sbit sign stored correctly.");
+assert((bufzz[1] & 0xFF) >>> 0 === 2, "Bitfield sbit value stored correctly.");
+assert(backzz.a === true, "Bitfield bool read back correctly.");
+assert(backzz.b === 1, "Bitfield ubit read back correctly.");
+assert(backzz.c === 1, "Bitfield ubitLE read back correctly.");
+assert(backzz.d === -2, "Bitfield sbit read back correctly.");
 console.log("\nAll tests passed!");
