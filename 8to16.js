@@ -14,7 +14,7 @@ function _fixString(str) {
         if (bitsRight !== 1) {
             codepoint = 0;
             bytesLeft = bitsRight || 1;
-        }
+        } else if (!bytesLeft) console.warn("Bad UTF-8 sequence at", i, "in", JSON.stringify(str), '0x'+c.toString(16), Error().stack);
         c &= ~(0xFF80 >>> bitsRight);
         codepoint = (codepoint << 6) | c;
         --bytesLeft;
@@ -27,11 +27,9 @@ function _fixString(str) {
             }
         }
     }
-    return {
-        _fixed: true,
-        length: arr.length,
-        charCodeAt: function (i) { return arr[i]; }
-    }
+    arr._fixed = true;
+    arr.charCodeAt = function (i) { return arr[i]; }
+    return arr;
 }
 
 exports.fixString = _fixString;
