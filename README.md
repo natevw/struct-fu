@@ -138,6 +138,7 @@ These fields are intended for use *only* within a parent `_.struct` field (and t
 
 - `_.bool(name, count)` — A single bit, read back as a boolean.
 - `_.ubit(name, width, count)` — An unsigned integer; most significant bit first.
+- `_.ubitLE(name, width, count)` — An unsigned integer; least significant bit first.
 - `_.sbit(name, width, count)` — A signed integer; if the most sigificant bit is set the value is negative.
 
 Except for the `bitfield.name` and `bitfield.width` properties, the bitfield interface (used internally by `_.struct`) is undocumented and subject to change.
