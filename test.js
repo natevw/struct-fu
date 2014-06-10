@@ -115,4 +115,18 @@ assert(backzz.a === true, "Bitfield bool read back correctly.");
 assert(backzz.b === 1, "Bitfield ubit read back correctly.");
 assert(backzz.c === 1, "Bitfield ubitLE read back correctly.");
 assert(backzz.d === -2, "Bitfield sbit read back correctly.");
+
+console.log (" = Padding check = ");
+
+var things = _.struct([
+    _.bool('thing1'),
+    _.padTo(7),
+    _.uint8('thing2')
+]);
+assert(things.size === 8, "Padded structure has correct size.");
+assert(things.fields.thing2.offset === 7, "Field after padding is at correct offset.");
+var thingOut = things.bytesFromValue({thing2:0x99}, Buffer([0,1,2,3,4,5,6,7,8]), {bytes:1});
+for (var i = 0; i < 8; ++i) assert(thingOut[i] === i, "Padded output has original value at index "+i);
+assert(thingOut[i] === 0x99, "Padded output has correct value at index "+i);
+
 console.log("\nAll tests passed!");

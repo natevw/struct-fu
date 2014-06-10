@@ -143,9 +143,17 @@ These fields are intended for use *only* within a parent `_.struct` field (and t
 
 Except for the `bitfield.name` and `bitfield.width` properties, the bitfield interface (used internally by `_.struct`) is undocumented and subject to change.
 
+
+### Special field types
+
+These do not obey any of the rules above. Right now there is only one such field:
+
+- `_.padTo(offset)` — An anoymous field that must be contained within a `_.struct` to be of any use. The presence of a `_.padTo` field increases the size of the containing `_.struct` (and adjusts the offset of any following field) to the `offset` provided. This field is safe (and potentially convenient!) to use after bitfield types. Padding is also special in that it causes the containing struct's `.bytesFromValue` to *leave alone* any current buffer contents under the padded region, rather than initializing to default values as a bytefield would do.
+
+
 ## License
 
-© 2014 Nathan Vander Wilt
+© 2014 Nathan Vander Wilt.
 Funding for this work was provided in part by Technical Machine, Inc.
 
 Reuse under your choice of:

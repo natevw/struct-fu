@@ -74,8 +74,18 @@ _.struct = function (name, fields, count) {
     }
     
     var _size = {bytes:0, bits:0},
+        _padsById = Object.create(null),
         fieldsObj = fields.reduce(function (obj, f, i) {
-            if (f._hoistFields) Object.keys(f._hoistFields).forEach(function (name) {
+            if ('_padTo' in f) {
+                // HACK: we really should just make local copy of *all* fields
+                f._id || (f._id = Math.random().toFixed(20).slice(2));
+                f = _padsById[f._id] = (_size.bits) ? {
+                    width: 8*(f._padTo - _size.bytes) - _size.bits
+                } : {
+                    size: f._padTo - _size.bytes
+                };
+            }
+            else if (f._hoistFields) Object.keys(f._hoistFields).forEach(function (name) {
                 var _f = Object.create(f._hoistFields[name]);
                 if ('width' in _f) _f.offset = {bytes:_f.offset.bytes+_size.bytes, bits:_f.offset.bits};
                 else _f.offset += _size.bytes;
@@ -96,6 +106,8 @@ _.struct = function (name, fields, count) {
             off || (off = {bytes:0, bits:0});
             var obj = new Object();
             fields.forEach(function (f) {
+                if ('_padTo' in f) return addField(off, _padsById[f._id]);
+                
                 var value = f.valueFromBytes(buf, off);
                 if (f.name) obj[f.name] = value;
                 else if (typeof value === 'object') extend(obj, value);
@@ -107,6 +119,8 @@ _.struct = function (name, fields, count) {
             buf || (buf = new Buffer(this.size));
             off || (off = {bytes:0, bits:0});
             fields.forEach(function (f) {
+                if ('_padTo' in f) return addField(off, _padsById[f._id]);
+                
                 var value = (f.name) ? obj[f.name] : obj;
                 f.bytesFromValue(value, buf, off);
             });
@@ -118,6 +132,11 @@ _.struct = function (name, fields, count) {
         name: name
     }, count);
 };
+
+_.padTo = function (off) {
+    return {_padTo:off};
+};
+
 
 // NOTE: bitfields must be embedded in a struct, and don't arrayize!
 //       (this limitation is same as C itself, and keeps things sane…)
@@ -304,7 +323,5 @@ _.int16 = standardField('Int16BE');
 _.int32 = standardField('Int32BE');
 _.int16le = standardField('Int16LE');
 _.int32le = standardField('Int32LE');
-
-//_.padTo?
 
 module.exports = _;
