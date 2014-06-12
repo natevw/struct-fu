@@ -256,7 +256,8 @@ _.char = bytefield.bind({
     b2v: function (b) {
         var v = b.toString('utf8'),
             z = v.indexOf('\0');
-        return (~z) ? v.slice(0, z) : v;
+        // WORKAROUND: using .substring for https://github.com/tessel/beta/issues/454
+        return (~z) ? v.substring(0, z) : v;
     },
     vTb: function (v,b) {
         v || (v = '');
@@ -268,7 +269,8 @@ _.char16le = bytefield.bind({
     b2v: function (b) {
         var v = b.toString('utf16le'),
             z = v.indexOf('\0');
-        return (~z) ? v.slice(0, z) : v;
+        // WORKAROUND: using .substring for https://github.com/tessel/beta/issues/454
+        return (~z) ? v.substring(0, z) : v;
     },
     vTb: function (v,b) {
         v || (v = '');
