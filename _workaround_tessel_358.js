@@ -24,7 +24,7 @@ Buffer.prototype.write = function (str, off, len, enc) {
         s = 0, sl = str.length; 
     if (enc === 'ascii') while (b < len && s < sl) buf[b++] = (str.charCodeAt(s++) & 0xFF) || 0x20;
     else if (enc === 'utf8') while (b < len && s < sl) {
-        // NOTE: node.js follows CESU-8 (and splits surrogate pairs) rather than UTF-8 proper
+        // [OLD INACCURATE] NOTE: node.js follows CESU-8 (and splits surrogate pairs) rather than UTF-8 proper
         var c = str.charCodeAt(s);
         if (c < 0x80) {
             buf[b++] = c;
@@ -58,7 +58,7 @@ Buffer.prototype.write = function (str, off, len, enc) {
 };
 
 var _toString = Buffer.prototype.toString;
-if (workaroundTessel426) Buffer.prototype.toString = function (enc) {
+if (1 || workaroundTessel426) Buffer.prototype.toString = function (enc) {
     if (enc === 'utf16le' || enc === 'ucs2') {
         var buf = this, arr = [], tmp;
         for (var i = 0, len = buf.length >>> 1; i < len; ++i) {
