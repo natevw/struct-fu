@@ -166,6 +166,7 @@ function bitfield(name, width, count) {
                 over = (val & mask) << (32 - end);
             word &= ~zero;
             word |= over;
+            word >>>= 0;      // WORKAROUND: https://github.com/tessel/runtime/issues/644
             buf.writeUInt32BE(word, off.bytes, true);
             addField(off, this);
             return buf;
