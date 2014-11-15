@@ -94,8 +94,8 @@ You can use each of these fields nested inside a structure, or on their own. For
 The basic field (and bitfield) interface gets extended in several cases:
 
 - `arrayField.field` — if a field was created with a `count`, this property holds a reference to the "original" field.
-— `structField.fields` — for a field of type `_.struct`, this property is an object giving you access to nested fields by name
-— `nestedField.offset` — a field fetched via `structField.fields` will have an offset property. For normal fields this is a number given in bytes; for bitfield types (see below) this will be an object with separate `bytes` and `bits` properties. (Note that you can reuse a field within multiple structures and it will have the correct offset within each. The `nestedField` found in each `structField.fields` is actually a **new** object whose *prototype* is the original (reused) field.)
+- `structField.fields` — for a field of type `_.struct`, this property is an object giving you access to nested fields by name
+- `nestedField.offset` — a field fetched via `structField.fields` will have an offset property. For normal fields this is a number given in bytes; for bitfield types (see below) this will be an object with separate `bytes` and `bits` properties. (Note that you can reuse a field within multiple structures and it will have the correct offset within each. The `nestedField` found in each `structField.fields` is actually a **new** object whose *prototype* is the original (reused) field.)
 
 Taken together, these special properties allow you to do things like:
 
