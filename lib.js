@@ -43,7 +43,7 @@ function addField(ctr, f) {
 }
 
 function arrayizeField(f, count) {
-    return (count) ? extend({
+    return (typeof count === 'number') ? extend({
         name: f.name,
         field: f,
         valueFromBytes: function (buf, off) {
@@ -222,7 +222,7 @@ function bytefield(name, size, count) {
         size = name;
         name = null;
     }
-    size || (size = 1);
+    size = (typeof size === 'number') ? size : 1;
     var impl = this;
     return arrayizeField({
         valueFromBytes: function (buf, off) {
