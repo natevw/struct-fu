@@ -79,11 +79,16 @@ _.struct = function (name, fields, count) {
             if ('_padTo' in f) {
                 // HACK: we really should just make local copy of *all* fields
                 f._id || (f._id = Math.random().toFixed(20).slice(2));
-                f = _padsById[f._id] = (_size.bits) ? {
+                var _f = _padsById[f._id] = (_size.bits) ? {
                     width: 8*(f._padTo - _size.bytes) - _size.bits
                 } : {
                     size: f._padTo - _size.bytes
                 };
+                if (_f.width < 0 || _f.size < 0) {
+                    var xtraMsg = (_size.bits) ? (" and "+_size.bits+" bits") : '';
+                    throw Error("Invalid .padTo("+f._padTo+") field, struct is already "+_size.bytes+" byte(s)"+xtraMsg+"!");
+                }
+                f = _f;
             }
             else if (f._hoistFields) Object.keys(f._hoistFields).forEach(function (name) {
                 var _f = Object.create(f._hoistFields[name]);

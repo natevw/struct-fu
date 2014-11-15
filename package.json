@@ -1,6 +1,6 @@
 {
   "name": "struct-fu",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "description": "Yet another node.js struct implementation (object↔︎buffer conversion) ",
   "main": "lib.js",
   "scripts": {

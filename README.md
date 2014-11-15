@@ -148,7 +148,7 @@ Except for the `bitfield.name` and `bitfield.width` properties, the bitfield int
 
 These do not obey any of the rules above. Right now there is only one such field:
 
-- `_.padTo(offset)` — An anoymous field that must be contained within a `_.struct` to be of any use. The presence of a `_.padTo` field increases the size of the containing `_.struct` (and adjusts the offset of any following field) to the `offset` provided. This field is safe (and potentially convenient!) to use after bitfield types. Padding is also special in that it causes the containing struct's `.bytesFromValue` to *leave alone* any current buffer contents under the padded region, rather than initializing to default values as a bytefield would do.
+- `_.padTo(offset)` — An anoymous field that must be contained within a `_.struct` to be of any use. The presence of a `_.padTo` field increases the size of the containing `_.struct` (and adjusts the offset of any following field) to the `offset` provided. This field is safe (and potentially convenient!) to use after bitfield types. Padding is also special in that it causes the containing struct's `.bytesFromValue` to *leave alone* any current buffer contents under the padded region, rather than initializing to default values as a bytefield would do. Padding ensures the struct, or rather, the struct up to and including this field, is neither less (nor more!) than the intended size.
 
 
 ## License
