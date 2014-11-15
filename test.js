@@ -129,8 +129,26 @@ var thingOut = things.bytesFromValue({thing2:0x99}, Buffer([0,1,2,3,4,5,6,7,8]),
 for (var i = 0; i < 8; ++i) assert(thingOut[i] === i, "Padded output has original value at index "+i);
 assert(thingOut[i] === 0x99, "Padded output has correct value at index "+i);
 
+console.log (" = Repetition checks = ");
+
 assert(_.byte(0,0).size === 0, "Size of zero-length and zero-count field is zero.");
 assert(_.byte(0,9).size === 0, "Size of zero-length and multi-count field is still zero.");
 assert(_.byte(9,0).size === 0, "Size of zero-count of a field with length is still zero.");
+
+var multiStruct = _.struct([_.uint8('n')], 2),
+    msBuf = new Buffer(multiStruct.size),
+    msArr = [];
+msBuf.fill(0xFF);
+msArr.push({n:0x42});
+multiStruct.bytesFromValue(msArr, msBuf);
+assert(msBuf[0] === 0x42, "First value set.");
+assert(msBuf[1] === 0xFF, "Next value left.");
+msArr.length = 2;
+multiStruct.bytesFromValue(msArr, msBuf);
+assert(msBuf[0] === 0x42, "First value still set.");
+assert(msBuf[1] === 0x00, "Next value is cleared.");
+msArr[1] = msArr[0];
+multiStruct.bytesFromValue(msArr, msBuf);
+assert(msBuf[1] === msArr[0].n, "Values as expected.");
 
 console.log("\nAll tests passed!");
