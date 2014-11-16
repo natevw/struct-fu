@@ -61,6 +61,7 @@ function arrayizeField(f, count) {
             for (var idx = 0, len = arr.length; idx < len; idx += 1) {
                 f.bytesFromValue(arr[idx], buf, off);
             }
+            while (idx++ < count) addField(off, f);
             return buf;
         }
     }, ('width' in f) ? {width: f.width * count} : {size: f.size * count}) : f;

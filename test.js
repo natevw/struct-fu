@@ -165,4 +165,12 @@ msArr[1] = msArr[0];
 multiStruct.bytesFromValue(msArr, msBuf);
 assert(msBuf[1] === msArr[0].n, "Values as expected.");
 
+var afterMulti = _.struct([_.uint8('nn', 2), _.uint8('n')]),
+    amBuf = new Buffer(afterMulti.size);
+amBuf.fill(0x01);
+afterMulti.bytesFromValue({nn:[0x00], n:0x02}, amBuf);
+assert(amBuf[0] === 0, "Array value correct.");
+assert(amBuf[2] === 2, "After array in expected position.");
+assert(amBuf[1] === 1, "Array missing correctly.");
+
 console.log("\nAll tests passed!");
