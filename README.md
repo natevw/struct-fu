@@ -41,8 +41,8 @@ var entry = _.struct([
 ]);
 
 var obj0 = {filename:"autoexec", extension:"batch", flags:{reserved:2,archive:true}},
-    _buf = entry.bytesFromValue(obj0),
-    obj1 = entry.valueFromBytes(_buf);
+    _buf = entry.pack(obj0),
+    obj1 = entry.unpack(_buf);
 console.log('',obj0, "\n==>\n", obj1);
 ```
 
@@ -84,10 +84,10 @@ All the field above implement the same interface once created:
 
 - `field.name` — The name of this field instance or `null` if none was provided.
 - `field.size` — The total size of buffer this field (including any nested/repeated fields) will read/write.
-- `field.bytesFromValue(val, buf)` — The type of `val` provided will depend on the field (e.g. number for numerics, object for structs, array for any counted field), but this method always returns a buffer. `buf` is optional — if you do not provide a slice of an existing buffer to fill, a new buffer of length `field.size` will be returned.
-- `field.valueFromBytes(buf)` — Returns a JavaScript value extracted from the provided buffer.
+- `field.pack(val, buf)` (alias: `bytesFromValue`) — The type of `val` provided will depend on the field (e.g. number for numerics, object for structs, array for any counted field), but this method always returns a buffer. `buf` is optional — if you do not provide a slice of an existing buffer to fill, a new buffer of length `field.size` will be returned.
+- `field.unpack(buf)` (alias: `valueFromBytes`) — Returns a JavaScript value extracted from the provided buffer.
 
-You can use each of these fields nested inside a structure, or on their own. For example, `_.uint32(2).valueFromBytes(Buffer(8))` uses an anonymous field to convert the unitialized buffer into an array of two somewhat-random numbers.
+You can use each of these fields nested inside a structure, or on their own. For example, `_.uint32(2).unpack(Buffer(8))` uses an anonymous field to convert the unitialized buffer into an array of two somewhat-random numbers.
 
 ### Extended field interfaces
 
@@ -120,7 +120,7 @@ var itemType = itemList.field,
     ownerField = itemType.fields['ownerName'];
 console.log("Each item has fields:", Object.keys(itemType.fields).join(', '));
 console.log("Within an item, count is at offset:", countField.offset);
-console.log("Here is an owner name converted on its own:", ownerField.bytesFromValue({first:"Foorenious", last:"Barçuno"}));
+console.log("Here is an owner name converted on its own:", ownerField.pack({first:"Foorenious", last:"Barçuno"}));
 ```
 
 This will output:
@@ -148,7 +148,7 @@ Except for the `bitfield.name` and `bitfield.width` properties, the bitfield int
 
 These do not obey any of the rules above. Right now there is only one such field:
 
-- `_.padTo(offset)` — An anoymous field that must be contained within a `_.struct` to be of any use. The presence of a `_.padTo` field increases the size of the containing `_.struct` (and adjusts the offset of any following field) to the `offset` provided. This field is safe (and potentially convenient!) to use after bitfield types. Padding is also special in that it causes the containing struct's `.bytesFromValue` to *leave alone* any current buffer contents under the padded region, rather than initializing to default values as a bytefield would do. Padding ensures the struct, or rather, the struct up to and including this field, is neither less (nor more!) than the intended size.
+- `_.padTo(offset)` — An anoymous field that must be contained within a `_.struct` to be of any use. The presence of a `_.padTo` field increases the size of the containing `_.struct` (and adjusts the offset of any following field) to the `offset` provided. This field is safe (and potentially convenient!) to use after bitfield types. Padding is also special in that it causes the containing struct's `.pack` to *leave alone* any current buffer contents under the padded region, rather than initializing to default values as a bytefield would do. Padding ensures the struct, or rather, the struct up to and including this field, is neither less (nor more!) than the intended size.
 
 
 ## License

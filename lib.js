@@ -29,7 +29,7 @@ function addField(ctr, f) {
 }
 
 function arrayizeField(f, count) {
-    return (typeof count === 'number') ? extend({
+    var f2 = (typeof count === 'number') ? extend({
         name: f.name,
         field: f,
         valueFromBytes: function (buf, off) {
@@ -51,6 +51,9 @@ function arrayizeField(f, count) {
             return buf;
         }
     }, ('width' in f) ? {width: f.width * count} : {size: f.size * count}) : f;
+    f2.pack = f2.bytesFromValue;
+    f2.unpack = f2.valueFromBytes;
+    return f2;
 }
 
 _.struct = function (name, fields, count) {

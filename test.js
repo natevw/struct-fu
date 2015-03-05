@@ -173,4 +173,15 @@ assert(amBuf[0] === 0, "Array value correct.");
 assert(amBuf[2] === 2, "After array in expected position.");
 assert(amBuf[1] === 1, "Array missing correctly.");
 
+console.log (" = New pack/unpack API = ");
+
+var newAPI = _.struct([_.uint8('nn', 2), _.uint8('n')], 2),
+    newBuf = newAPI.pack([{nn:[0xF0], n:0xF2}, {nn:[0xF1], n:0xF3}]),
+    newArr = newAPI.unpack(newBuf);
+assert(Buffer.isBuffer(newBuf), "New API still returns buffer");
+assert(newBuf.length === 6, "New API buffer is correct length");
+assert(Array.isArray(newArr), "New API unpacks expected object type");
+assert(newArr.length === 2, "New API unpacked array is correct length");
+assert(newArr[1].nn[0] === 0xF1, "…and contains expected value.");
+
 console.log("\nAll tests passed!");
