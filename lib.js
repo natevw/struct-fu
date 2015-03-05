@@ -68,7 +68,7 @@ _.struct = function (name, fields, count) {
         fieldsObj = fields.reduce(function (obj, f, i) {
             if ('_padTo' in f) {
                 // HACK: we really should just make local copy of *all* fields
-                f._id || (f._id = Math.random().toFixed(20).slice(2));
+                f._id || (f._id = 'id'+Math.random().toFixed(20).slice(2));      // WORKAROUND: https://github.com/tessel/runtime/issues/716
                 var _f = _padsById[f._id] = (_size.bits) ? {
                     width: 8*(f._padTo - _size.bytes) - _size.bits
                 } : {
