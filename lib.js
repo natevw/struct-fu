@@ -7,17 +7,6 @@ if (Buffer([255]).readUInt32BE(0, true) !== 0xff000000) {
     throw Error("Runtime incompatibility! Bitfield logic assumes 0-padded reads off end of buffer.");
 }
 
-// WORKAROUND: https://github.com/tessel/beta/issues/426 [sic]
-if (Buffer("\ud83c\udf91", 'utf16le')[0] !== 0x3c) require("./_workaround_tessel_358.js");
-
-// flag for WORKAROUND: https://github.com/tessel/beta/issues/380
-var workaroundTessel380 = function () {
-    var b = Buffer([0]),
-        s = b.slice(0);
-    return ((s[0] = 0xFF) !== b[0]);
-}();
-
-
 function extend(obj) {
     Array.prototype.slice.call(arguments, 1).forEach(function (ext) {
         Object.keys(ext).forEach(function (key) {
@@ -243,8 +232,6 @@ function bytefield(name, size, count) {
             var blk = buf.slice(off.bytes, off.bytes+this.size),
                 len = impl.vTb.call(this, val, blk);
             if (len < blk.length) blk.fill(0, len);
-            // WORKAROUND: https://github.com/tessel/beta/issues/380
-            if (workaroundTessel380) blk.copy(buf, off.bytes);
             addField(off, this);
             return buf;
         },
@@ -263,8 +250,7 @@ _.char = bytefield.bind({
     b2v: function (b) {
         var v = b.toString('utf8'),
             z = v.indexOf('\0');
-        // WORKAROUND: using .substring for https://github.com/tessel/beta/issues/454
-        return (~z) ? v.substring(0, z) : v;
+        return (~z) ? v.slice(0, z) : v;
     },
     vTb: function (v,b) {
         v || (v = '');
@@ -276,8 +262,7 @@ _.char16le = bytefield.bind({
     b2v: function (b) {
         var v = b.toString('utf16le'),
             z = v.indexOf('\0');
-        // WORKAROUND: using .substring for https://github.com/tessel/beta/issues/454
-        return (~z) ? v.substring(0, z) : v;
+        return (~z) ? v.slice(0, z) : v;
     },
     vTb: function (v,b) {
         v || (v = '');
