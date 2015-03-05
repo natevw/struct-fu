@@ -130,8 +130,7 @@ _.padTo = function (off) {
 };
 
 
-// NOTE: bitfields must be embedded in a struct, and don't arrayize!
-//       (this limitation is same as C itself, and keeps things sane…)
+// NOTE: bitfields must be embedded in a struct (C/C++ share this limitation)
 
 var FULL = 0xFFFFFFFF;
 function bitfield(name, width, count) {
