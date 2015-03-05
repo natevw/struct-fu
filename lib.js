@@ -1,8 +1,5 @@
 var _ = {};
 
-
-// avoid https://github.com/tessel/beta/issues/379 for now — should only affect us if our callers pass too short a buffer
-//if (Buffer([255]).readUInt32BE(0, true) !== 0xff000000 || Buffer(0).readUInt32BE(9999, true) !== 0) {
 if (Buffer([255]).readUInt32BE(0, true) !== 0xff000000) {
     throw Error("Runtime incompatibility! Bitfield logic assumes 0-padded reads off end of buffer.");
 }
@@ -147,7 +144,7 @@ function bitfield(name, width, count) {
         valueFromBytes: function (buf, off) {
             off || (off = {bytes:0, bits:0});
             var end = (off.bits || 0) + width,
-                word = buf.readUInt32BE(off.bytes, true),
+                word = buf.readUInt32BE(off.bytes, true) || 0,
                 over = word >>> (32 - end);
             addField(off, this);
             return impl.b2v.call(this, over & mask);
@@ -156,7 +153,7 @@ function bitfield(name, width, count) {
             val = impl.v2b.call(this, val || 0);
             off || (off = {bytes:0, bits:0});
             var end = (off.bits || 0) + width,
-                word = buf.readUInt32BE(off.bytes, true),
+                word = buf.readUInt32BE(off.bytes, true) || 0,
                 zero = mask << (32 - end),
                 over = (val & mask) << (32 - end);
             word &= ~zero;
