@@ -80,7 +80,15 @@ assert(b16[0] === 0x3c, "UTF-16 byte 0 as expected");
 assert(b16[1] === 0xd8, "UTF-16 byte 1 as expected");
 assert(b16[2] === 0x91, "UTF-16 byte 2 as expected");
 assert(b16[3] === 0xdf, "UTF-16 byte 3 as expected");
-assert(ucs.valueFromBytes(b16) === str, "UTF-16 converted back correctly.");
+assert(ucs.valueFromBytes(b16) === str, "UTF-16LE converted back correctly.");
+var str = "\ud83c\udf91",
+    ucs = _.char16be(8	),
+    b16 = ucs.bytesFromValue(str);
+assert(b16[0] === 0xd8, "UTF-16BE byte 0 as expected");
+assert(b16[1] === 0x3c, "UTF-16BE byte 1 as expected");
+assert(b16[2] === 0xdf, "UTF-16BE byte 2 as expected");
+assert(b16[3] === 0x91, "UTF-16BE byte 3 as expected");
+assert(ucs.valueFromBytes(b16) === str, "UTF-16BE converted back correctly.");
 var utf = _.char(4),
     b_8 = utf.bytesFromValue(str);
 //console.log(b_8);
@@ -89,6 +97,7 @@ assert(b_8[1] === 0x9F, "UTF-8 byte 1 as expected");
 assert(b_8[2] === 0x8E, "UTF-8 byte 2 as expected");
 assert(b_8[3] === 0x91, "UTF-8 byte 3 as expected");
 assert(utf.valueFromBytes(b_8) === str, "UTF-8 converted back correctly.");
+
 
 console.log("  = Bitfield check = ");
 var bitle = _.struct([

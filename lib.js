@@ -239,6 +239,16 @@ function bytefield(name, size, count) {
     }, count);
 }
 
+// http://stackoverflow.com/a/7460958/72637
+function swapBytesPairs(buffer) {
+	var l = buffer.length;
+	for (var i = 1; i < l; i += 2) {
+		var a = buffer[i - 1];
+    	buffer[i - 1] = buffer[i];
+    	buffer[i] = a;
+	}
+	return buffer
+}
 
 _.byte = bytefield.bind({
     b2v: function (b) { return b; },
@@ -265,10 +275,25 @@ _.char16le = bytefield.bind({
     },
     vTb: function (v,b) {
         v || (v = '');
+        b.fill(0);
         return b.write(v, 'utf16le');
     }
 });
 
+_.char16be = bytefield.bind({
+    b2v: function (b) {
+    	swapBytesPairs(b)
+        var v = b.toString('utf16le'),
+            z = v.indexOf('\0');
+        return (~z) ? v.slice(0, z) : v;
+    },
+    vTb: function (v,b) {
+        v || (v = '');
+        b.fill(0);
+        b.write(v, 'utf16le');
+        return swapBytesPairs(b)
+    }
+});
 
 function standardField(sig, size) {
     var read = 'read'+sig,
