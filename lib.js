@@ -241,13 +241,13 @@ function bytefield(name, size, count) {
 
 // http://stackoverflow.com/a/7460958/72637
 function swapBytesPairs(buffer) {
-	var l = buffer.length;
-	for (var i = 1; i < l; i += 2) {
-		var a = buffer[i - 1];
-    	buffer[i - 1] = buffer[i];
-    	buffer[i] = a;
-	}
-	return buffer
+    var l = buffer.length;
+    for (var i = 1; i < l; i += 2) {
+        var a = buffer[i - 1];
+        buffer[i - 1] = buffer[i];
+        buffer[i] = a;
+    }
+    return buffer
 }
 
 _.byte = bytefield.bind({
@@ -282,9 +282,9 @@ _.char16le = bytefield.bind({
 
 _.char16be = bytefield.bind({
     b2v: function (b) {
-        var temp = new Buffer(b.length)
-        b.copy(temp)
-    	swapBytesPairs(temp)
+        var temp = new Buffer(b.length);
+        b.copy(temp);
+        swapBytesPairs(temp)
         var v = temp.toString('utf16le'),
             z = v.indexOf('\0');
         return (~z) ? v.slice(0, z) : v;
