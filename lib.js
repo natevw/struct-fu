@@ -282,8 +282,10 @@ _.char16le = bytefield.bind({
 
 _.char16be = bytefield.bind({
     b2v: function (b) {
-    	swapBytesPairs(b)
-        var v = b.toString('utf16le'),
+        var temp = new Buffer(b.length)
+        b.copy(temp)
+    	swapBytesPairs(temp)
+        var v = temp.toString('utf16le'),
             z = v.indexOf('\0');
         return (~z) ? v.slice(0, z) : v;
     },
