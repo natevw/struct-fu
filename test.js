@@ -74,20 +74,28 @@ assert(obj1.filesize === 0, "Filesize value as expected");
 
 console.log("  = Unicode check = ");
 var str = "\ud83c\udf91",
-    ucs = _.char16le(4),
+    ucs = _.char16le(8),
     b16 = ucs.bytesFromValue(str);
 assert(b16[0] === 0x3c, "UTF-16 byte 0 as expected");
 assert(b16[1] === 0xd8, "UTF-16 byte 1 as expected");
 assert(b16[2] === 0x91, "UTF-16 byte 2 as expected");
 assert(b16[3] === 0xdf, "UTF-16 byte 3 as expected");
+assert(b16[4] === 0, "UTF-16 byte 4 as expected");
+assert(b16[5] === 0, "UTF-16 byte 5 as expected");
+assert(b16[6] === 0, "UTF-16 byte 6 as expected");
+assert(b16[7] === 0, "UTF-16 byte 7 as expected");
 assert(ucs.valueFromBytes(b16) === str, "UTF-16LE converted back correctly.");
 var str = "\ud83c\udf91",
-    ucs = _.char16be(8	),
+    ucs = _.char16be(8),
     b16 = ucs.bytesFromValue(str);
 assert(b16[0] === 0xd8, "UTF-16BE byte 0 as expected");
 assert(b16[1] === 0x3c, "UTF-16BE byte 1 as expected");
 assert(b16[2] === 0xdf, "UTF-16BE byte 2 as expected");
 assert(b16[3] === 0x91, "UTF-16BE byte 3 as expected");
+assert(b16[4] === 0, "UTF-16BE byte 4 as expected");
+assert(b16[5] === 0, "UTF-16BE byte 5 as expected");
+assert(b16[6] === 0, "UTF-16BE byte 6 as expected");
+assert(b16[7] === 0, "UTF-16BE byte 7 as expected");
 assert(ucs.valueFromBytes(b16) === str, "UTF-16BE converted back correctly.");
 var utf = _.char(4),
     b_8 = utf.bytesFromValue(str);

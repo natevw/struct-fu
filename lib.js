@@ -276,7 +276,6 @@ _.char16le = bytefield.bind({
     },
     vTb: function (v,b) {
         v || (v = '');
-        b.fill(0);
         return b.write(v, 'utf16le');
     }
 });
@@ -291,9 +290,9 @@ _.char16be = bytefield.bind({
     },
     vTb: function (v,b) {
         v || (v = '');
-        b.fill(0);
-        b.write(v, 'utf16le');
-        return swapBytesPairs(b)
+        var len = b.write(v, 'utf16le');
+        swapBytesPairs(b)
+        return len;
     }
 });
 
