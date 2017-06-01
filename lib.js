@@ -343,4 +343,24 @@ _.int32 = standardField('Int32BE');
 _.int16le = standardField('Int16LE');
 _.int32le = standardField('Int32LE');
 
+
+_.derive = function (orig, pack, unpack) {
+    return function (name, count) {
+        if (typeof name !== 'string') {
+            count = name;
+            name = null;
+        }
+        return arrayizeField({
+            valueFromBytes: function (buf, off) {
+                return unpack(orig.valueFromBytes(buf, off));
+            },
+            bytesFromValue: function (val, buf, off) {
+                return orig.bytesFromValue(pack(val), buf, off);
+            },
+            size: orig.size,
+            name: name
+        }, count);
+    }
+};
+
 module.exports = _;
