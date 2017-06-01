@@ -201,4 +201,27 @@ assert(Array.isArray(newArr), "New API unpacks expected object type");
 assert(newArr.length === 2, "New API unpacked array is correct length");
 assert(newArr[1].nn[0] === 0xF1, "…and contains expected value.");
 
+console.log (" = Derived type = ");
+
+var hexType = _.derive(_.uint32(2), function pack(hex) {
+    return [ parseInt(hex.slice(0,8), 16), parseInt(hex.slice(8,16), 16) ]
+}, function unpack(arr) {
+    function _hex(n,ff) { return (n+ff+1).toString(16).slice(1); }
+    return _hex(arr[0], 0xFFFFFFFF) + _hex(arr[1], 0xFFFFFFFF)
+});
+
+var bignums = ["01234567ABCDEF90", "8BADF00DC00010FF"],
+    dervStruct = _.struct([_.char('header',8), hexType('bignums',3), _.bool('footer')]),
+    dervBuf = dervStruct.pack({header:"Hello.", bignums:bignums, footer:true}),
+    dervObj = dervStruct.unpack(dervBuf);
+
+assert(dervStruct.fields.hexnums.offset === 8, "Derived field is at correct offset.");
+assert(dervStruct.fields.footer.offset === 14, "Field following derived field is at correct offset.");
+assert(dervBuff[8] === 0x01 && dervBuff[15] === 0x90, "Spot check of first packed value looks alright.");
+assert(dervBuff[17] === 0xAD && dervBuff[22] === 0x10, "Spot check of second packed value looks alright.");
+assert(dervBuff[24] === 0x80, "Following field packed as expected.");
+assert(dervObj.bignums[0] === bignums[0], "First array item unpacked via derived field is correct.");
+assert(dervObj.bignums[1] === bignums[1], "Second array item unpacked via derived field is correct.");
+assert(dervObj.footer, "Following field value correct.");
+
 console.log("\nAll tests passed!");
