@@ -350,16 +350,15 @@ _.derive = function (orig, pack, unpack) {
             count = name;
             name = null;
         }
-        return arrayizeField({
+        return arrayizeField(extend({
             valueFromBytes: function (buf, off) {
                 return unpack(orig.valueFromBytes(buf, off));
             },
             bytesFromValue: function (val, buf, off) {
                 return orig.bytesFromValue(pack(val), buf, off);
             },
-            size: orig.size,
             name: name
-        }, count);
+        }, ('width' in orig) ? {width:orig.width} : {size:orig.size}), count);
     }
 };
 

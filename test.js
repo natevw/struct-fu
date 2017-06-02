@@ -226,4 +226,27 @@ assert(dervObj.bignums[0] === bignums[0], "First array item unpacked via derived
 assert(dervObj.bignums[1] === bignums[1], "Second array item unpacked via derived field is correct.");
 assert(dervObj.footer, "Following field value correct.");
 
+var derInvert = _.derive(_.bool(), function (v) { return !v }, function (v) { return !v }),
+    derString = _.derive(derInvert(), function (s) { return s === 'true' }, function (x) { return ''+x }),
+    derBoolArray = _.struct([
+      derString('vals', 3),
+      _.padTo(2)
+    ]),
+    derBuf = new Buffer("0000", 'hex'),
+    _ = derBoolArray.pack({vals:['true', 'false', 'true', "extra"]}, derBuf),
+    derObj = derBoolArray.unpack(derBuf);
+
+assert(derBoolArray.size === 2, "Struct with doubly-derived field is correct size.");
+assert((derBuf[0] & 0b10000000) === 0b00000000, "First bit in doubly-derived output is correct.");
+assert((derBuf[0] & 0b01000000) === 0b01000000, "Second bit in doubly-derived output is correct.");
+assert((derBuf[0] & 0b00100000) === 0b00000000, "Third bit in doubly-derived output is correct.");
+//assert(derBuf[0] === 0x40, "First byte packed fully as expected.");
+assert(derBuf[1] === 0x00, "Padding after derived field packed as expected.");
+assert(derObj.vals.length === 3, "Doubly-derived rountripped array has correct length.");
+assert(derObj.vals[0] === 'true', "Doubly-derived first value round-tripped correctly.");
+assert(derObj.vals[1] === 'false', "Doubly-derived second value round-tripped correctly.");
+assert(derObj.vals[0] === 'true', "Doubly-derived third value round-tripped correctly.");
+
+
+
 console.log("\nAll tests passed!");
