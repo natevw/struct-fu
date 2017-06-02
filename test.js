@@ -246,7 +246,7 @@ assert(derBoolArray.size === 2, "Struct with doubly-derived field is correct siz
 assert((derBuf[0] & 0b10000000) === 0b00000000, "First bit in doubly-derived output is correct.");
 assert((derBuf[0] & 0b01000000) === 0b01000000, "Second bit in doubly-derived output is correct.");
 assert((derBuf[0] & 0b00100000) === 0b00000000, "Third bit in doubly-derived output is correct.");
-//assert(derBuf[0] === 0x40, "First byte packed fully as expected.");
+assert(derBuf[0] === 0x40, "First byte packed fully as expected.");
 assert(derBuf[1] === 0x00, "Padding after derived field packed as expected.");
 assert(derObj.vals.length === 3, "Doubly-derived rountripped array has correct length.");
 assert(derObj.vals[0] === 'true', "Doubly-derived first value round-tripped correctly.");
