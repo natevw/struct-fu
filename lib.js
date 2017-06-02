@@ -44,7 +44,7 @@ function arrayizeField(f, count) {
             arr || (arr = new Array(count));
             buf || (buf = new Buffer(this.size));
             off || (off = {bytes:0, bits:0});
-            for (var idx = 0, len = arr.length; idx < len; idx += 1) {
+            for (var idx = 0, len = Math.min(arr.length, count); idx < len; idx += 1) {
                 f.bytesFromValue(arr[idx], buf, off);
             }
             while (idx++ < count) addField(off, f);
