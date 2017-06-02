@@ -190,6 +190,12 @@ assert(amBuf[0] === 0, "Array value correct.");
 assert(amBuf[2] === 2, "After array in expected position.");
 assert(amBuf[1] === 1, "Array missing correctly.");
 
+var halfArray = _.struct([_.bool('nibble', 4), _.padTo('2')]),
+    halfBuf = new Buffer([0,0]);
+halfArray.pack({nibble:[1,1,1,1, 1,1,1,1, 1,1,1,1]}, halfBuf);
+assert(halfBuf[0] === 0xF0, "First byte set as expected when providing overlong array");
+assert(halfBuf[1] === 0x00, "Second byte set as expected when providing overlong array");
+
 console.log (" = New pack/unpack API = ");
 
 var newAPI = _.struct([_.uint8('nn', 2), _.uint8('n')], 2),
