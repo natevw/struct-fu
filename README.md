@@ -65,7 +65,7 @@ Here are the available "normal" field types. Note that for standalone fields the
 - `_.char16le(name, size, count)` — UTF-16BLE string. This has the same behavior as `_.char`; note that `size` is still the *width* of the field (in bytes) and *not* the number of UTF-16 surrogate pairs. Node.js may truncate between surrogate pairs rather than Unicode code points, but if given an odd-sized width will terminate with `\0` rather than half of a `.charCodeAt()` value.
 - `_.char16be(name, size, count)` — UTF-16BE string. This has the same behavior as `_.char16le`, but Big Endian. The buffer is padded with zero bytes.
 - `_.byte(name, size, count)` — Binary buffer. Writes truncated or zero padded as necessary. Always reads field to full size.
-- `_.<numeric type>(name, count)` — Floats and integers, defaulting to network byte order (i.e. Big Endian) or you can use the `…le` versions. Numeric type fields pretty much correspond directly to the equivalent node.js `Buffer` read/write methods you would expect. (There are no 64-bit integers because JavaScript does not properly support the full range of such values.)
+- `_.<numeric type>(name, count)` — Floats and integers, defaulting to network byte order (i.e. Big Endian) or you can use the `…le` versions. Numeric type fields pretty much correspond directly to the equivalent node.js `Buffer` read/write methods you would expect. (There are no 64-bit integers because JavaScript does not properly support the full range of such values, but see the [derived types](#derived-types) example below!)
     - `_.float32`
     - `_.float64`
     - `_.uint8`
