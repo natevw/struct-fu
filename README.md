@@ -201,7 +201,7 @@ var thing = _.struct([
 thingField.pack({
    id: UInt64("0x1A2B3C4C5D6E7F80"),
    name: "example",
-   position: [UInt64(42), UInt64(-8), UInt64(-99)]
+   position: [UInt64(42), UInt64(8), UInt64(99)]
 }) instanceof Buffer
 
 ```
