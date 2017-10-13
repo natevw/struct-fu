@@ -162,7 +162,7 @@ Using the types built in to struct-fu, the best you could do is convert a 64-bit
 
 But what if your app leverages a custom number class — like [UInt64](https://developer.mozilla.org/en-US/docs/Mozilla/js-ctypes/js-ctypes_reference/UInt64) — and's using it everywhere for big integers? You'll probably want to convert to and from that type directly. You can with struct-fu, but you'll first need to create a derived type!
 
-- `new_type = _.derive(base, deconstruct, construct)` — Returns a new **type** based on a base **field** `base`. Your `base_val = deconstruct(app_val)` receives the original value and should "deconconstruct" it into a value which the base field can pack. Your `app_val = construct(base_val)` receives the value as unpacked by the base field and should return a "constructed" value from it.
+- `new_type = _.derive(base, deconstruct, construct)` — Returns a new **type** based on a base **field** `base`. Your `base_val = deconstruct(app_val)` receives the original value and should "deconstruct" it into a value which the base field can pack. Your `app_val = construct(base_val)` receives the value as unpacked by the base field and should return a "constructed" value from it.
 
 To clarify some terminology:
 
