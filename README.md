@@ -152,6 +152,63 @@ These do not obey any of the rules above. Right now there is only one such field
 - `_.padTo(offset)` — An anoymous field that must be contained within a `_.struct` to be of any use. The presence of a `_.padTo` field increases the size of the containing `_.struct` (and adjusts the offset of any following field) to the `offset` provided. This field is safe (and potentially convenient!) to use after bitfield types. Padding is also special in that it causes the containing struct's `.pack` to *leave alone* any current buffer contents under the padded region, rather than initializing to default values as a bytefield would do. Padding ensures the struct, or rather, the struct up to and including this field, is neither less (nor more!) than the intended size.
 
 
+### Derived types
+
+Derived types are something like "plugins" for struct-fu.
+
+For example, neither node.js Buffer nor struct-fu deals with "64-bit" integer methods. (JavaScript's [number type](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type) can only manage integers up to 53 bits.)
+
+Using the types built in to struct-fu, the best you could do is convert a 64-bit field into two 32-bit values.
+
+But what if your app leverages a custom number class — like [UInt64](https://developer.mozilla.org/en-US/docs/Mozilla/js-ctypes/js-ctypes_reference/UInt64) — and's using it everywhere for big integers? You'll probably want to convert to and from that type directly. You can with struct-fu, but you'll first need to create a derived type!
+
+- `new_type = _.derive(base, deconstruct, construct)` — Returns a new **type** based on a base **field** `base`. Your `base_val = deconstruct(app_val)` receives the original value and should "deconconstruct" it into a value which the base field can pack. Your `app_val = construct(base_val)` receives the value as unpacked by the base field and should return a "constructed" value from it.
+
+To clarify some terminology:
+
+- by **type**, we mean a function that can be used to define (generate) a field. `_.byte` is a type.
+- by **field**, we mean an object that can be used to pack/unpack a buffer. `_.byte(42)` is a field.
+
+In order to support flexible reuse on the one hand, and complex "base" representations on the other, the `_.derive` method creates a new *type* (factory function) from a generated *field* (defined object). For example:
+
+```js
+var _base = _.uint32(2);
+
+var my_uint64be = _.derive(_base, function app_to_base(numObj) {
+    return [ UInt64.hi(numObj), UInt64.lo(numObj) ];
+}, function base_to_app(arr) {
+    return UInt64.join(arr[0], arr[1]);
+});
+```
+
+As a typical struct-fu *field*, `_base` is ready to convert between an 8-byte buffer and an array of two 32-bit numbers on its own. But we wrap it in a new *type* `my_uint64be` that bridges the gap between that two-number array and a UInt64 number type, wherever it is used to define a field.
+
+Put together:
+
+```js
+var uint64_t = _.derive(_.uint32(2), function app_to_base(numObj) {
+    // …
+}, function base_to_app(arr) {
+    // …
+});
+
+var thing = _.struct([
+  uint64_t("id"),
+  _.char("name", 32),
+  uint64_t("position", 3)
+]);
+
+thingField.pack({
+   id: UInt64("0x1A2B3C4C5D6E7F80"),
+   name: "example",
+   position: [UInt64(42), UInt64(-8), UInt64(-99)]
+}) instanceof Buffer
+
+```
+
+Notice how our custom `uint64be_t` type can be used wherever needed, almost as if it were a (nonexistent!) builtin `_.uint64` type.
+
+
 ## License
 
 © 2014 Nathan Vander Wilt.
