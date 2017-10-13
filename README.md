@@ -206,7 +206,7 @@ thingField.pack({
 
 ```
 
-Notice how our custom `uint64be_t` type can be used wherever needed, almost as if it were a (nonexistent!) builtin `_.uint64` type.
+Notice how our custom `uint64_t` type can be used wherever needed, almost as if it were a (nonexistent!) builtin `_.uint64` type.
 
 
 ## License
