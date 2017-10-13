@@ -1,6 +1,6 @@
 {
   "name": "struct-fu",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Yet another node.js struct implementation (object↔︎buffer conversion)",
   "main": "lib.js",
   "scripts": {
@@ -12,7 +12,15 @@
   },
   "keywords": [
     "struct",
-    "buffer"
+    "buffer",
+    "binary",
+    "encode",
+    "decode",
+    "endian",
+    "pack",
+    "unpack",
+    "serialize",
+    "bitfield"
   ],
   "author": "Nathan Vander Wilt",
   "license": "BSD-2-Clause",
