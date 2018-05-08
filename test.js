@@ -239,7 +239,7 @@ var derInvert = _.derive(_.bool(), function (v) { return !v }, function (v) { re
       _.padTo(2)
     ]),
     derBuf = new Buffer("0000", 'hex'),
-    _ = derBoolArray.pack({vals:['true', 'false', 'true', "extra"]}, derBuf),
+    __ = derBoolArray.pack({vals:['true', 'false', 'true', "extra"]}, derBuf),
     derObj = derBoolArray.unpack(derBuf);
 
 assert(derBoolArray.size === 2, "Struct with doubly-derived field is correct size.");
@@ -253,6 +253,24 @@ assert(derObj.vals[0] === 'true', "Doubly-derived first value round-tripped corr
 assert(derObj.vals[1] === 'false', "Doubly-derived second value round-tripped correctly.");
 assert(derObj.vals[0] === 'true', "Doubly-derived third value round-tripped correctly.");
 
+console.log (" = Out of bounds check = ");
+
+var shortStruct = _.struct([
+    _.ubit('a', 2),
+    _.padTo(1),
+    _.ubit('b', 2),
+    _.padTo(2),
+    _.ubit('c', 2),
+    _.padTo(3)
+]);
+
+var packedShortStruct = shortStruct.pack({ a: 1, b: 2, c: 3 });
+assert(packedShortStruct.length === 3, "Struct less than 32 bits packs successfully");
+
+var unpackedShortStruct = shortStruct.unpack(packedShortStruct);
+assert(unpackedShortStruct.a === 1, "First bit in unpacked < 32 bit structs is unpacked correctly");
+assert(unpackedShortStruct.b === 2, "Second bit in unpacked < 32 bit structs is unpacked correctly");
+assert(unpackedShortStruct.c === 3, "Third bit in unpacked < 32 bit structs is unpacked correctly");
 
 
 console.log("\nAll tests passed!");

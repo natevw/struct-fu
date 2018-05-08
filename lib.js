@@ -1,9 +1,5 @@
 var _ = {};
 
-if (Buffer([255]).readUInt32BE(0, true) !== 0xff000000) {
-    throw Error("Runtime incompatibility! Bitfield logic assumes 0-padded reads off end of buffer.");
-}
-
 function extend(obj) {
     Array.prototype.slice.call(arguments, 1).forEach(function (ext) {
         Object.keys(ext).forEach(function (key) {
