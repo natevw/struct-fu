@@ -37,6 +37,16 @@ function truncatedWriteUInt32BE(buffer, offset, data) {
     }
 }
 
+// new Buffer() is deprecated in recent node. This ensures
+// we always use the correct method for the current node.
+function newBuffer(size) {
+    if (Buffer.alloc) {
+        return Buffer.alloc(size);
+    } else {
+        return new Buffer(size);
+    }
+}
+
 function extend(obj) {
     Array.prototype.slice.call(arguments, 1).forEach(function (ext) {
         Object.keys(ext).forEach(function (key) {
@@ -75,7 +85,7 @@ function arrayizeField(f, count) {
         },
         bytesFromValue: function (arr, buf, off) {
             arr || (arr = new Array(count));
-            buf || (buf = new Buffer(this.size));
+            buf || (buf = newBuffer(this.size));
             off || (off = {bytes:0, bits:0});
             for (var idx = 0, len = Math.min(arr.length, count); idx < len; idx += 1) {
                 f.bytesFromValue(arr[idx], buf, off);
@@ -144,7 +154,7 @@ _.struct = function (name, fields, count) {
         },
         bytesFromValue: function (obj, buf, off) {
             obj || (obj = {});
-            buf || (buf = new Buffer(this.size));
+            buf || (buf = newBuffer(this.size));
             off || (off = {bytes:0, bits:0});
             fields.forEach(function (f) {
                 if ('_padTo' in f) return addField(off, _padsById[f._id]);
@@ -260,7 +270,7 @@ function bytefield(name, size, count) {
         },
         bytesFromValue: function (val, buf, off) {
             off || (off = {bytes:0});
-            buf || (buf = new Buffer(this.size));
+            buf || (buf = newBuffer(this.size));
             var blk = buf.slice(off.bytes, off.bytes+this.size),
                 len = impl.vTb.call(this, val, blk);
             if (len < blk.length) blk.fill(0, len);
@@ -315,7 +325,7 @@ _.char16le = bytefield.bind({
 
 _.char16be = bytefield.bind({
     b2v: function (b) {
-        var temp = new Buffer(b.length);
+        var temp = newBuffer(b.length);
         swapBytesPairs(b, temp);
         var v = temp.toString('utf16le'),
             z = v.indexOf('\0');
@@ -347,7 +357,7 @@ function standardField(sig, size) {
             },
             bytesFromValue: function (val, buf, off) {
                 val || (val = 0);
-                buf || (buf = new Buffer(this.size));
+                buf || (buf = newBuffer(this.size));
                 off || (off = {bytes:0});
                 buf[dump](val, off.bytes);
                 addField(off, this);
