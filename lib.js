@@ -1,5 +1,42 @@
 var _ = {};
 
+// These functions approximately reproduce the (pre-node 10) noAssert functionality,
+// which allowed reading/writing past the end of a buffer, but 0-padding/ignoring
+// any extra content.
+
+function truncatedReadUInt32BE(buffer, offset) {
+    var availableBytes = buffer.length - offset;
+
+    if (availableBytes >= 4) {
+        return buffer.readUInt32BE(offset);
+    } else if (availableBytes === 3) {
+        var first = buffer.readUInt16BE(offset);
+        var second = buffer.readUInt8(offset + 2);
+        return ((first << 8) + second) << 8 >>> 0;
+    } else if (availableBytes === 2) {
+        return buffer.readUInt16BE(offset) << 16 >>> 0;
+    } else if (availableBytes === 1) {
+        return buffer.readUInt8(offset) << 24 >>> 0;
+    } else if (availableBytes <= 0) {
+        return 0x0;
+    }
+}
+
+function truncatedWriteUInt32BE(buffer, offset, data) {
+    var availableBytes = buffer.length - offset;
+
+    if (availableBytes >= 4) {
+        buffer.writeUInt32BE(data, offset);
+    } else if (availableBytes === 3) {
+        buffer.writeUInt16BE(data >>> 16, offset);
+        buffer.writeUInt8((data >>> 8) & 0xff, offset + 2);
+    } else if (availableBytes === 2) {
+        buffer.writeUInt16BE(data >>> 16, offset);
+    } else if (availableBytes === 1) {
+        buffer.writeUInt8(data >>> 24, offset);
+    }
+}
+
 function extend(obj) {
     Array.prototype.slice.call(arguments, 1).forEach(function (ext) {
         Object.keys(ext).forEach(function (key) {
@@ -142,7 +179,7 @@ function bitfield(name, width, count) {
         valueFromBytes: function (buf, off) {
             off || (off = {bytes:0, bits:0});
             var end = (off.bits || 0) + width,
-                word = buf.readUInt32BE(off.bytes, true) || 0,
+                word = truncatedReadUInt32BE(buf, off.bytes) || 0,
                 over = word >>> (32 - end);
             addField(off, this);
             return impl.b2v.call(this, over & mask);
@@ -151,13 +188,13 @@ function bitfield(name, width, count) {
             val = impl.v2b.call(this, val || 0);
             off || (off = {bytes:0, bits:0});
             var end = (off.bits || 0) + width,
-                word = buf.readUInt32BE(off.bytes, true) || 0,
+                word = truncatedReadUInt32BE(buf, off.bytes) || 0,
                 zero = mask << (32 - end),
                 over = (val & mask) << (32 - end);
             word &= ~zero;
             word |= over;
             word >>>= 0;      // WORKAROUND: https://github.com/tessel/runtime/issues/644
-            buf.writeUInt32BE(word, off.bytes, true);
+            truncatedWriteUInt32BE(buf, off.bytes, word);
             addField(off, this);
             return buf;
         },
