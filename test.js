@@ -1,5 +1,23 @@
 var _ = require("./lib");
 
+// new Buffer() is deprecated in recent node. This ensures
+// we always use the correct method for the current node.
+function newBuffer(size) {
+    if (Buffer.alloc) {
+        return Buffer.alloc(size);
+    } else {
+        return new Buffer(size);
+    }
+}
+
+function bufferFrom(content, encoding) {
+    if (Buffer.from) {
+        return Buffer.from(content, encoding);
+    } else {
+        return new Buffer(content, encoding);
+    }
+}
+
 var entry = _.struct([
     _.char('filename',8),
     _.char('extension',3),
@@ -53,7 +71,7 @@ assert(entry.fields.reserved.offset === 12, "…but reserved array field itself 
 assert(entry.fields.reserved2.offset.bytes === 21, "Hoisted field 'reserved2' has correct offset.");
 
 console.log("  = Write check =  ");
-var _bufKnown = new Buffer("6175746f65786563626174a00000000000000000000000000000000000000000", 'hex');
+var _bufKnown = bufferFrom("6175746f65786563626174a00000000000000000000000000000000000000000", 'hex');
 assert(_bufKnown.length === 32, "Runtime parsed known buffer as 'hex'.");
 assert(_bufKnown[0] === 0x61 && _bufKnown[7] === 0x63 && _bufKnown[31] === 0, "Known buffer parse passes spot check.");
 assert(_buf.length === _bufKnown.length, "Buffer size matches");
@@ -142,7 +160,7 @@ var things = _.struct([
 ]);
 assert(things.size === 8, "Padded structure has correct size.");
 assert(things.fields.thing2.offset === 7, "Field after padding is at correct offset.");
-var thingOut = things.bytesFromValue({thing2:0x99}, Buffer([0,1,2,3,4,5,6,7,8]), {bytes:1});
+var thingOut = things.bytesFromValue({thing2:0x99}, bufferFrom([0,1,2,3,4,5,6,7,8]), {bytes:1});
 for (var i = 0; i < 8; ++i) assert(thingOut[i] === i, "Padded output has original value at index "+i);
 assert(thingOut[i] === 0x99, "Padded output has correct value at index "+i);
 
@@ -167,7 +185,7 @@ assert(_.byte(0,9).size === 0, "Size of zero-length and multi-count field is sti
 assert(_.byte(9,0).size === 0, "Size of zero-count of a field with length is still zero.");
 
 var multiStruct = _.struct([_.uint8('n')], 2),
-    msBuf = new Buffer(multiStruct.size),
+    msBuf = newBuffer(multiStruct.size),
     msArr = [];
 msBuf.fill(0xFF);
 msArr.push({n:0x42});
@@ -183,7 +201,7 @@ multiStruct.bytesFromValue(msArr, msBuf);
 assert(msBuf[1] === msArr[0].n, "Values as expected.");
 
 var afterMulti = _.struct([_.uint8('nn', 2), _.uint8('n')]),
-    amBuf = new Buffer(afterMulti.size);
+    amBuf = newBuffer(afterMulti.size);
 amBuf.fill(0x01);
 afterMulti.bytesFromValue({nn:[0x00], n:0x02}, amBuf);
 assert(amBuf[0] === 0, "Array value correct.");
@@ -191,7 +209,7 @@ assert(amBuf[2] === 2, "After array in expected position.");
 assert(amBuf[1] === 1, "Array missing correctly.");
 
 var halfArray = _.struct([_.bool('nibble', 4), _.padTo('2')]),
-    halfBuf = new Buffer([0,0]);
+    halfBuf = bufferFrom([0,0]);
 halfArray.pack({nibble:[1,1,1,1, 1,1,1,1, 1,1,1,1]}, halfBuf);
 assert(halfBuf[0] === 0xF0, "First byte set as expected when providing overlong array");
 assert(halfBuf[1] === 0x00, "Second byte set as expected when providing overlong array");
@@ -238,8 +256,8 @@ var derInvert = _.derive(_.bool(), function (v) { return !v }, function (v) { re
       derString('vals', 3),
       _.padTo(2)
     ]),
-    derBuf = new Buffer("0000", 'hex'),
-    _ = derBoolArray.pack({vals:['true', 'false', 'true', "extra"]}, derBuf),
+    derBuf = bufferFrom("0000", 'hex'),
+    __ = derBoolArray.pack({vals:['true', 'false', 'true', "extra"]}, derBuf),
     derObj = derBoolArray.unpack(derBuf);
 
 assert(derBoolArray.size === 2, "Struct with doubly-derived field is correct size.");
@@ -253,6 +271,24 @@ assert(derObj.vals[0] === 'true', "Doubly-derived first value round-tripped corr
 assert(derObj.vals[1] === 'false', "Doubly-derived second value round-tripped correctly.");
 assert(derObj.vals[0] === 'true', "Doubly-derived third value round-tripped correctly.");
 
+console.log (" = Out of bounds check = ");
+
+var shortStruct = _.struct([
+    _.ubit('a', 2),
+    _.padTo(1),
+    _.ubit('b', 2),
+    _.padTo(2),
+    _.ubit('c', 2),
+    _.padTo(3)
+]);
+
+var packedShortStruct = shortStruct.pack({ a: 1, b: 2, c: 3 });
+assert(packedShortStruct.length === 3, "Struct less than 32 bits packs successfully");
+
+var unpackedShortStruct = shortStruct.unpack(packedShortStruct);
+assert(unpackedShortStruct.a === 1, "First bit in unpacked < 32 bit structs is unpacked correctly");
+assert(unpackedShortStruct.b === 2, "Second bit in unpacked < 32 bit structs is unpacked correctly");
+assert(unpackedShortStruct.c === 3, "Third bit in unpacked < 32 bit structs is unpacked correctly");
 
 
 console.log("\nAll tests passed!");
